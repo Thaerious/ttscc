@@ -49,6 +49,7 @@ class Uploader{
             msg.scriptStates.push(element);
         }
 
+        console.log(msg);
         return JSON.stringify(msg);
     }
 
@@ -70,7 +71,7 @@ class Uploader{
         let filename = element.guid + ".xml";
         if (element.guid === "-1") filename = Constants.GLOBAL_FILENAME + ".xml";
 
-        let path = Path.join(Constants.SCRIPT_DIR, filename);
+        let path = Path.join(Constants.UI_DIR, filename);
         if (!FS.existsSync(path)) return;
         let data = FS.readFileSync(path);
         element.ui = data.toString('ascii', 0, data.length);

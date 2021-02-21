@@ -26,49 +26,28 @@ class IncludeCleaner {
         });
 
         for await (const line of rl) {
-            cb(line);
-        }
-    }
-
-    async readFile(filename) {
-        if (!FS.existsSync(filename)) {
-            throw new Error(`File "${filename} does not exist.`);
-        }
-
-        let rl = ReadLine.createInterface({
-            input: FS.createReadStream(filename),
-            crlfDelay: Infinity
-        });
-
-        for await (const line of rl) {
-            this.processLine(line);
+            let processedLine = this.processLine(line);
+            if (processedLine !== undefined) cb(processedLine);
         }
     }
 
     processLine(line){
-        if (line.match(/^---> #include [a-zA-Z0-9./]+[ \t]*/)) {
-            let filename = line.substring(14).trim();
+        if (line.startsWith("---")) console.log(line);
+
+        if (line.match(/^---[>-] ?#include [a-zA-Z0-9./]+[ \t]*/)) {
+            let filename = line.substring(line.indexOf("#")).trim();
             if (this.lastInclude === null) {
                 this.lastInclude = filename;
-                this.online(`#include ${filename}`);
+                return `${filename}`;
             }
         }
-        else if (line.match(/^---< #include [a-zA-Z0-9./]+[ \t]*/)) {
+        else if (line.match(/^---[<-] ?#include [a-zA-Z0-9./]+[ \t]*/)) {
             let filename = line.substring(14).trim();
             if (filename === this.lastInclude) this.lastInclude = null;
         }
         else if (this.lastInclude === null) {
-            this.online(line);
+            return(line);
         }
-    }
-
-    /**
-     * Override this method to handle cleaned text.
-     * Only lines that are not part of includes are put here.
-     * @param {*} line 
-     */
-    online(line) {
-        console.log(line);
     }
 }
 

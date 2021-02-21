@@ -10,14 +10,31 @@ class WatchTTS {
 
     constructor() {
         /** wait for TTS to request a connection */
-        this.server = new Net.Server();
-        this.server.listen(Constants.READ_PORT);
+        this.server = new Net.Server();        
+    }
 
+    listen(){
+        this.server.listen(Constants.READ_PORT);
         console.log("awaiting connection");
         this.server.on("connection", (socket) => {
             console.log("Server connection initiated");
             this.setupReadSocket(socket);
         });
+    }
+
+    listenOnce(){
+        this.server.listen(Constants.READ_PORT);
+        console.log("awaiting connection");
+        this.server.on("connection", (socket) => {
+            console.log("Server connection initiated");
+            this.setupReadSocket(socket);
+            this.server.close();
+        });
+    }
+
+    close(){
+        if (this.readSocket) this.readSocket.close();
+        if (this.writeSocket) this.writeSocket.close();
     }
 
     setupWriteSocket() {
@@ -62,8 +79,6 @@ class MessageParser {
      * @param {object} message 
      */
     parse(message) {
-        console.log(message);
-
         switch (message.messageID) {
             case 1: // game loaded
                 this.gameLoaded(message);
@@ -94,7 +109,6 @@ class MessageParser {
         this.clearDirectory(Constants.SCRIPT_DIR);
         this.clearDirectory(Constants.UI_DIR);
         let names = {};
-
         
         for (let element of message.scriptStates) {
             let filename = element.guid;
@@ -135,6 +149,23 @@ class MessageParser {
     }
 }
 
-let watchTTS = new WatchTTS();
+/**
+ * Send a get request to the server.
+ */
+function get(){
+    let socket = new Net.Socket();
+    socket.connect(Constants.WRITE_PORT);
+    let message = '{"messageID" : "0"}'
 
+    socket.on("error", (err)=>{
+        console.log(err);
+        if (err.code === 'ECONNREFUSED') console.log("Connection to TTS refused");
+        else console.log(err);
+    });
 
+    socket.on("connect", () => {            
+        socket.write(message);
+    });
+}
+
+export {WatchTTS, get};
