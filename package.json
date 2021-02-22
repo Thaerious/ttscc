@@ -2,11 +2,14 @@
   "name": "tts-listener",
   "version": "1.0.0",
   "description": "",
-  "main": "ttsl.js",
+  "main": "src/index.js",
+  "bin": {
+    "watch-tts": "./src/index.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "type": "module",
   "author": "",
-  "license": "ISC"
+  "license": "MIT"
 }
