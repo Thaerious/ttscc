@@ -1,14 +1,15 @@
 import Readline from 'readline';
 import Uploader from "./uploader.js"
-import {WatchTTS, get} from "./ttsl.js";
+import {WatchTTS, get, MessageParser} from "./ttsl.js";
 
 class CLI{
-    constructor(){
+    start(){
+        this.watchTTS = new WatchTTS().listen();
         const RL = Readline.createInterface(process.stdin, process.stdout);
         RL.setPrompt('TTSL> ');
         RL.prompt();
 
-        RL.on('line', function(line) {
+        RL.on('line', line => {
             try {
                 this.command(line);
             }catch(err){
@@ -16,21 +17,19 @@ class CLI{
                 console.log(err);
             }
             RL.prompt();
-        }.bind(this));
+        });
 
         RL.on('close', function() {
             process.exit(0);
-        });
-    }   
-
-    start(){
-        let watchTTS = new WatchTTS().listen();
+        });        
     }
 
-    command(line){
-        let split = line.split();
+    command(line){        
+        let split = line.split(/[ ]+/);
 
-        switch (split[0]){
+        console.log(split[0].trim());
+
+        switch (split[0].trim()){
             case "get":                
                 get();
                 break;

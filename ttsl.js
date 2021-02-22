@@ -84,7 +84,7 @@ class MessageParser {
                 break;
             case 3: // error message
                 let ef = new ErrorFinder();
-                await ef.find(message);
+                await ef.find(message);                
                 ef.report();
                 break;
             case 4: // custom message (ignored)
@@ -184,4 +184,4 @@ function get(){
     });
 }
 
-export {WatchTTS, get};
+export {WatchTTS, get, MessageParser};
