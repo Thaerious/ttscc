@@ -90,6 +90,11 @@ class ErrorFinder {
         return path;
     }
 
+    /**
+     * Return true if the filename with extension exists.
+     * @param {*} filename 
+     * @param {*} ext 
+     */
     getIncludeExt(filename, ext){
         let path = Path.join(Constants.INCLUDE_DIR, filename + ext);
         return FS.existsSync(path) ? path : null;

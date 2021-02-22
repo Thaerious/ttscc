@@ -1,5 +1,5 @@
 import Readline from 'readline';
-import Uploader from "./uploader.js"
+import Uploader from "./Uploader.js"
 import {WatchTTS, get, MessageParser} from "./WatchTTS.js";
 
 /**
