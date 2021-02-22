@@ -1,11 +1,4 @@
-import IncludeCleaner from './IncludeCleaner.js';
+import ErrorFinder from './ErrorFinder.js';
 
-let ic = new IncludeCleaner();
-// ic.readFile("./tts-data/sent/global.lua")
-ic.readString(
-    "hello world\n" +
-    "---> #include dummy\n" + 
-    "this line excluded" +
-    "---< #include dummy\n"
-
-    );
+let r = await new ErrorFinder().seek(9);
+console.log(r);

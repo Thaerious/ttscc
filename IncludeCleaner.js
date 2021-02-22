@@ -32,8 +32,6 @@ class IncludeCleaner {
     }
 
     processLine(line){
-        if (line.startsWith("---")) console.log(line);
-
         if (line.match(/^---[>-] ?#include [a-zA-Z0-9./]+[ \t]*/)) {
             let filename = line.substring(line.indexOf("#")).trim();
             if (this.lastInclude === null) {

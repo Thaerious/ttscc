@@ -5,28 +5,25 @@ import Path from 'path';
 import Constants from './Constants.js';
 import IncludeCleaner from './IncludeCleaner.js';
 import OS from 'os';
+import ErrorFinder from './ErrorFinder.js';
 
 class WatchTTS {
 
     constructor() {
         /** wait for TTS to request a connection */
-        this.server = new Net.Server();        
+        this.server = new Net.Server();                
     }
 
     listen(){
         this.server.listen(Constants.READ_PORT);
-        console.log("awaiting connection");
         this.server.on("connection", (socket) => {
-            console.log("Server connection initiated");
             this.setupReadSocket(socket);
         });
     }
 
     listenOnce(){
         this.server.listen(Constants.READ_PORT);
-        console.log("awaiting connection");
         this.server.on("connection", (socket) => {
-            console.log("Server connection initiated");
             this.setupReadSocket(socket);
             this.server.close();
         });
@@ -34,13 +31,6 @@ class WatchTTS {
 
     close(){
         if (this.readSocket) this.readSocket.close();
-        if (this.writeSocket) this.writeSocket.close();
-    }
-
-    setupWriteSocket() {
-        this.writeSocket = new Net.Socket();
-        this.writeSocket.connect(Constants.WRITE_PORT);
-        this.writeSocket.on("connect", () => this.sendHandshake());
     }
 
     setupReadSocket(socket) {
@@ -57,15 +47,6 @@ class WatchTTS {
             this.messageParser.parse(JSON.parse(amalgametedData));
         });        
     }
-
-    sendHandshake() {
-        let msg = { messageID: 0 };
-        this.write(JSON.stringify(msg));
-    }
-
-    write(data) {
-        this.writeSocket.write(data);
-    }
 }
 
 /**
@@ -74,18 +55,37 @@ class WatchTTS {
  */
 class MessageParser {
 
+    constructor(){
+        if (!FS.existsSync(Constants.DATA_DIR)) FS.mkdirSync(Constants.DATA_DIR);
+
+        if (FS.existsSync(Path.join(Constants.DATA_DIR, Constants.NAME_FILE))){
+            let json = FS.readFileSync(Path.join(Constants.DATA_DIR, Constants.NAME_FILE));            
+            this.names = JSON.parse(json);
+        } else {
+            this.names = {};
+        }
+    }
+
     /**
      * Main entry point for incoming messages.
      * @param {object} message 
      */
-    parse(message) {
+    async parse(message) {
+        console.log(message);
         switch (message.messageID) {
-            case 1: // game loaded
-                this.gameLoaded(message);
+            case 0: // new object push
+                await this.pushObjects(message);
+                break;
+            case 1: // game loaded                
+                await this.gameLoaded(message);
                 break;
             case 2: // print message
+                console.log("SERVER> " + message.message);
                 break;
             case 3: // error message
+                let ef = new ErrorFinder();
+                await ef.find(message);
+                ef.report();
                 break;
             case 4: // custom message (ignored)
                 break;
@@ -99,38 +99,54 @@ class MessageParser {
     }
 
     /**
+     * Add a new object script/ui to the project.
+     * @param {*} message 
+     */
+    async pushObjects(message){
+        console.log("Object push received: ");
+        
+        for (let element of message.scriptStates) await this.processGameElement(element);
+        this.updateNameFile();
+    }
+
+    /**
      * Parse the message field "scriptStates" to determine object contents. Create a file 
      * in /tts-script for each TTS object that has a script.  Create a file in /tts-ui for
      * each TTS object that has ui.
      * @param {object} message 
      */
-    async gameLoaded(message) {
-        console.log("Game loaded from: " + message.savePath);
+    async gameLoaded(message) {     
+        console.log("Game Loaded: " + message.savePath);   
         this.clearDirectory(Constants.SCRIPT_DIR);
         this.clearDirectory(Constants.UI_DIR);
-        let names = {};
         
-        for (let element of message.scriptStates) {
-            let filename = element.guid;
-            if (element.guid === "-1") filename = Constants.GLOBAL_FILENAME;
+        for (let element of message.scriptStates) await this.processGameElement(element);
+        this.updateNameFile();
+    }
 
-            if (element.script){
-                let cleanText = await new IncludeCleaner().processString(element.script);
-                FS.writeFileSync(Path.join(Constants.SCRIPT_DIR, filename + ".lua"), cleanText);
-            } 
-            if (element.ui){
-                 FS.writeFileSync(Path.join(Constants.UI_DIR, filename + ".xml"), element.ui);
-            }
+    /**
+     * Process a single element of the 'scriptStates' field as sent by the server.
+     * Creates a new script file or ui file if the fields exist.
+     * @param {*} element 
+     */
+    async processGameElement(element){
+        let filename = element.guid;
+        if (element.guid === "-1") filename = Constants.GLOBAL_FILENAME;
 
-            names[element.guid] = `${element.name}`;
-        };
-
-        if (!FS.existsSync(Constants.DATA_DIR)) {
-            FS.mkdirSync(Constants.DATA_DIR);
+        if (element.script !== undefined){
+            let cleanText = await new IncludeCleaner().processString(element.script);
+            FS.writeFileSync(Path.join(Constants.SCRIPT_DIR, filename + ".lua"), cleanText);
+        } 
+        if (element.ui !== undefined){
+             FS.writeFileSync(Path.join(Constants.UI_DIR, filename + ".xml"), element.ui);
         }
-        FS.writeFileSync(Path.join(Constants.DATA_DIR, Constants.NAME_FILE), JSON.stringify(names));
-        console.log("write names");
-        console.log(names);
+
+        this.names[element.guid] = `${element.name}`;        
+    }
+
+    updateNameFile(){
+        let json = JSON.stringify(this.names);
+        FS.writeFileSync(Path.join(Constants.DATA_DIR, Constants.NAME_FILE), JSON.stringify(this.names));
     }
 
     /**
