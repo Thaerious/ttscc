@@ -7,6 +7,9 @@ import IncludeCleaner from './IncludeCleaner.js';
 import OS from 'os';
 import ErrorFinder from './ErrorFinder.js';
 
+/**
+ * WatchTTS listens to the TTS port for messages and interprets them accordingly.
+ */
 class WatchTTS {
 
     constructor() {
@@ -71,7 +74,6 @@ class MessageParser {
      * @param {object} message 
      */
     async parse(message) {
-        console.log(message);
         switch (message.messageID) {
             case 0: // new object push
                 await this.pushObjects(message);
@@ -174,7 +176,6 @@ function get(){
     let message = '{"messageID" : "0"}'
 
     socket.on("error", (err)=>{
-        console.log(err);
         if (err.code === 'ECONNREFUSED') console.log("Connection to TTS refused");
         else console.log(err);
     });

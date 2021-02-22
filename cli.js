@@ -1,7 +1,11 @@
 import Readline from 'readline';
 import Uploader from "./uploader.js"
-import {WatchTTS, get, MessageParser} from "./ttsl.js";
+import {WatchTTS, get, MessageParser} from "./WatchTTS.js";
 
+/**
+ * Command Line Interface
+ * 'CLI.start' is the main entry point for the program as called from 'watch-tts.js'.
+ */
 class CLI{
     start(){
         this.watchTTS = new WatchTTS().listen();
@@ -27,8 +31,6 @@ class CLI{
     command(line){        
         let split = line.split(/[ ]+/);
 
-        console.log(split[0].trim());
-
         switch (split[0].trim()){
             case "get":                
                 get();
@@ -46,7 +48,5 @@ class CLI{
         }
     }
 }
-
-new CLI().start();
 
 export default CLI;

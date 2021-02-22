@@ -19,7 +19,6 @@ class Uploader{
         let message = this.buildMessage();
 
         socket.on("error", (err)=>{
-            console.log(err);
             if (err.code === 'ECONNREFUSED') console.log("Connection to TTS refused");
             else console.log(err);
         });
@@ -49,7 +48,6 @@ class Uploader{
             msg.scriptStates.push(element);
         }
 
-        console.log(msg);
         return JSON.stringify(msg);
     }
 
