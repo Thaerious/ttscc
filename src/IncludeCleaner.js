@@ -56,15 +56,18 @@ class IncludeCleaner {
      */
     processLine(line){
         if (line.match(/^---[>-] ?#include [a-zA-Z0-9./]+[ \t]*/)) {
-            let filename = line.substring(line.indexOf("#")).trim();
+            let filename = line.substring(line.indexOf("#") + 8).trim();
             if (this.lastInclude === null) {
                 this.lastInclude = filename;
-                return `${filename}`;
+                return `#include ${filename}`;
             }
         }
         else if (line.match(/^---[<-] ?#include [a-zA-Z0-9./]+[ \t]*/)) {
-            let filename = line.substring(14).trim();
-            if (filename === this.lastInclude) this.lastInclude = null;
+            let filename = line.substring(line.indexOf("#") + 8).trim();
+            if (filename === this.lastInclude){
+                this.lastInclude = null;
+            } 
+            return undefined;
         }
         else if (this.lastInclude === null) {
             return(line);

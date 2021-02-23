@@ -142,6 +142,7 @@ class MessageParser {
     /**
      * Process a single element of the 'scriptStates' field as sent by the server.
      * Creates a new script file or ui file if the fields exist.
+     * The is effectivly where the script get's transfered from the server.
      * @param {*} element
      */
     async processGameElement(element){
