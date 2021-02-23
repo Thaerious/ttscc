@@ -11,14 +11,15 @@ import IncludeScanner from './IncludeScanner.js';
 class CLI{
     constructor(){
         this.uploader = new Uploader();
-        this.ttsListener = new TTSListener();
         this.includeScanner = new IncludeScanner();
+        this.fileListener = new FileListener(this.includeScanner, (guids)=>this.uploader.upload(guids));
 
-        // this.fileListener = new FileListener(this.uploader.includeMap, (guids)=>this.uploader.upload(guids));
-        this.fileListener = new FileListener(this.includeScanner, (guids)=>{
-            console.log("List of scripts needing updates");
-            console.log(guids);
-        });
+        // this.fileListener = new FileListener(this.includeScanner, (guids)=>{
+        //     console.log("List of scripts needing updates");
+        //     console.log(guids);
+        // });
+
+        this.ttsListener = new TTSListener(this.fileListener);
     }
 
     start(){
@@ -33,24 +34,27 @@ class CLI{
             }catch(err){
                 console.log("CLI error");
                 console.log(err);
+                this.uploader.close();
+                this.ttsListener.close();
+                process.exit(1);
             }
             RL.prompt();
         });
 
         RL.on('close', function() {
             process.exit(0);
-        });        
+        });
     }
 
-    command(line){        
+    command(line){
         let split = line.split(/[ ]+/);
 
         switch (split[0].trim()){
-            case "get":                
+            case "get":
                 get();
                 break;
             break;
-            case "put":                                
+            case "put":
                 this.uploader.upload();
                 break;
             break;
@@ -58,6 +62,9 @@ class CLI{
             case "includes":
                 console.log(this.includeScanner.getMap());
                 break;
+            case "resume":
+                this.fileListener.resume();
+            break;
             case "exit":
             case "x":
                 process.exit(0);

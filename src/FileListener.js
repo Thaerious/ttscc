@@ -1,13 +1,13 @@
-import FS, { fstat } from 'fs';
 import Uploader from './Uploader.js';
 import constants from './Constants.js';
 import Path from 'path';
+import chokidar from 'chokidar';
 
 /**
  * Listen for changes in the TTS script directories.
  * Delays the notification in case of multiple updates.
  */
-class FileListener{
+class FileListener {
 
     /**
      * When one or more valid updates occur callback is invoked with all the
@@ -15,46 +15,66 @@ class FileListener{
      * @param {object} includes a map of includes to GUIDs
      * @param {function} cb callback function invoked on update with the list of script GUIDs that are affected.
      */
-    constructor(includeScanner, cb){
-        FS.watch(Path.join(constants.INCLUDE_DIR), (eventtype, filename) => this.includeUpdate(eventtype, filename));
-        FS.watch(Path.join(constants.SCRIPT_DIR), (eventtype, filename) => this.scriptUpdate(eventtype, filename));
-
+    constructor(includeScanner, cb) {
         this.updatedFiles = new Set();
         this.includeScanner = includeScanner;
         this.timeout = null;
         this.cb = cb;
+        this.skip = false;
 
-        console.log(this.includeScanner.getMap());
+        this.start();
     }
 
-    includeUpdate(eventtype, filename){
-        let scriptName = filename.substr(0, filename.indexOf("."));
+    skipNextUpdate(){
+        this.skip = true;
+    }
+
+    start() {
+        this.includeWatcher = chokidar.watch(constants.INCLUDE_DIR, {
+            ignored: /(^|[\/\\])\../, // ignore dotfiles
+            persistent: true
+        });
+
+        this.scriptWatcher = chokidar.watch(constants.SCRIPT_DIR, {
+            ignored: /(^|[\/\\])\../, // ignore dotfiles
+            persistent: true
+        });
+
+        this.includeWatcher.on('change', path => this.includeUpdate(path));
+        this.scriptWatcher.on('change', path => this.scriptUpdate(path));
+    }
+
+    includeUpdate(filename) {
+        if (this.paused) return;
+        let scriptName = filename.substr(constants.INCLUDE_DIR.length - 1, filename.indexOf("."));
         let guids = this.includeScanner.getMap()[scriptName];
         if (!guids) return;
 
-        for (let guid of guids){
-            this.includeScanner.scan([guid]);  
+        for (let guid of guids) {
+            this.includeScanner.scan([guid]);
             this.updatedFiles.add(guid);
         }
-
-        if (this.timeout) clearTimeout(this.timeout);
-        this.timeout = setTimeout((event)=>{
-            this.cb(this.updatedFiles);
-            this.updatedFiles = new Set();
-        }, 500);
     }
 
-    scriptUpdate(eventtype, filename){
-        let guid = filename.substr(0, filename.indexOf("."));
+    scriptUpdate(filename) {
+        if (this.paused) return;
+        let guid = filename.substr(constants.SCRIPT_DIR.length - 1, filename.indexOf("."));
         this.includeScanner.scan([guid]);
         this.updatedFiles.add(guid);
-
+        this.setTimer();
+    }
+    
+    setTimer(){
         if (this.timeout) clearTimeout(this.timeout);
-        this.timeout = setTimeout((event)=>{
-            this.cb(this.updatedFiles);
+        this.timeout = setTimeout((event) => {
+            if (this.skip){
+                this.skip = false;
+            } else {
+                this.cb(this.updatedFiles);                
+            }
             this.updatedFiles = new Set();
-        }, 500);
-    }    
+        }, constants.UPDATE_DELAY);
+    }
 }
 
 export default FileListener;

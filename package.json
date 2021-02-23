@@ -11,5 +11,8 @@
   },
   "type": "module",
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "chokidar": "^3.5.1"
+  }
 }

@@ -10,9 +10,21 @@ import ErrorFinder from './ErrorFinder.js';
  */
 class TTSListener {
 
-    constructor() {
+    /**
+     * 
+     * @param {*} filelistener The filelistener will be paused when accepting incoming files.
+     */
+    constructor(filelistener) {
+        if (!filelistener) throw new Error(`NULL parameter: filelistener`);
+        this.filelistener = filelistener;
+
         /** wait for TTS to request a connection */
-        this.server = new Net.Server();                
+        this.server = new Net.Server();        
+    }
+
+    close(){
+        if (this.server) this.server.close();
+        if (this.readSocket) this.readSocket.close();
     }
 
     listen(){
@@ -30,15 +42,11 @@ class TTSListener {
         });
     }
 
-    close(){
-        if (this.readSocket) this.readSocket.close();
-    }
-
     setupReadSocket(socket) {
         this.readSocket = socket;
-        this.messageParser = new MessageParser();
+        this.messageParser = new MessageParser(this.filelistener);
         socket.setEncoding("utf8");
-        
+
         let amalgametedData = "";
         socket.on("data", (data) =>{
             amalgametedData = amalgametedData + data;
@@ -46,7 +54,7 @@ class TTSListener {
 
         socket.on("close", () =>{
             this.messageParser.parse(JSON.parse(amalgametedData));
-        });        
+        });
     }
 }
 
@@ -56,11 +64,14 @@ class TTSListener {
  */
 class MessageParser {
 
-    constructor(){
+    constructor(filelistener){
+        if (!filelistener) throw new Error(`NULL parameter: filelistener`);
+        this.filelistener = filelistener;
+
         if (!FS.existsSync(Constants.DATA_DIR)) FS.mkdirSync(Constants.DATA_DIR);
 
         if (FS.existsSync(Path.join(Constants.DATA_DIR, Constants.NAME_FILE))){
-            let json = FS.readFileSync(Path.join(Constants.DATA_DIR, Constants.NAME_FILE));            
+            let json = FS.readFileSync(Path.join(Constants.DATA_DIR, Constants.NAME_FILE));
             this.names = JSON.parse(json);
         } else {
             this.names = {};
@@ -69,14 +80,16 @@ class MessageParser {
 
     /**
      * Main entry point for incoming messages.
-     * @param {object} message 
+     * @param {object} message
      */
     async parse(message) {
         switch (message.messageID) {
             case 0: // new object push
+                await this.filelistener.skipNextUpdate();
                 await this.pushObjects(message);
                 break;
-            case 1: // game loaded                
+            case 1: // game loaded
+                await this.filelistener.skipNextUpdate();
                 await this.gameLoaded(message);
                 break;
             case 2: // print message
@@ -84,7 +97,7 @@ class MessageParser {
                 break;
             case 3: // error message
                 let ef = new ErrorFinder();
-                await ef.find(message);                
+                await ef.find(message);
                 ef.report();
                 break;
             case 4: // custom message (ignored)
@@ -100,34 +113,36 @@ class MessageParser {
 
     /**
      * Add a new object script/ui to the project.
-     * @param {*} message 
+     * @param {*} message
      */
     async pushObjects(message){
         console.log("Object push received: ");
-        
+
         for (let element of message.scriptStates) await this.processGameElement(element);
         this.updateNameFile();
     }
 
     /**
-     * Parse the message field "scriptStates" to determine object contents. Create a file 
+     * Parse the message field "scriptStates" to determine object contents. Create a file
      * in /tts-script for each TTS object that has a script.  Create a file in /tts-ui for
      * each TTS object that has ui.
-     * @param {object} message 
+     * @param {object} message
      */
-    async gameLoaded(message) {     
-        console.log("Game Loaded: " + message.savePath);   
+    async gameLoaded(message) {
+        console.log("Game Loaded: " + message.savePath);
         this.clearDirectory(Constants.SCRIPT_DIR);
         this.clearDirectory(Constants.UI_DIR);
-        
-        for (let element of message.scriptStates) await this.processGameElement(element);
+
+        for (let element of message.scriptStates){
+            await this.processGameElement(element);            
+        } 
         this.updateNameFile();
     }
 
     /**
      * Process a single element of the 'scriptStates' field as sent by the server.
      * Creates a new script file or ui file if the fields exist.
-     * @param {*} element 
+     * @param {*} element
      */
     async processGameElement(element){
         let filename = element.guid;
@@ -136,12 +151,12 @@ class MessageParser {
         if (element.script !== undefined){
             let cleanText = await new IncludeCleaner().processString(element.script);
             FS.writeFileSync(Path.join(Constants.SCRIPT_DIR, filename + ".lua"), cleanText);
-        } 
+        }
         if (element.ui !== undefined){
              FS.writeFileSync(Path.join(Constants.UI_DIR, filename + ".xml"), element.ui);
         }
 
-        this.names[element.guid] = `${element.name}`;        
+        this.names[element.guid] = `${element.name}`;
     }
 
     updateNameFile(){
@@ -151,7 +166,7 @@ class MessageParser {
 
     /**
      * If the directory exists, empty it, otherwise create it.
-     * @param {string} dir 
+     * @param {string} dir
      */
     clearDirectory(directory) {
         if (!FS.existsSync(directory)) {
@@ -178,7 +193,7 @@ function get(){
         else console.log(err);
     });
 
-    socket.on("connect", () => {            
+    socket.on("connect", () => {
         socket.write(message);
     });
 }

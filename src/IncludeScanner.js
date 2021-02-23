@@ -54,7 +54,6 @@ class IncludeScanner{
     }
 
     scanFile(guid){
-        console.log(`scanFile(${guid})`);
         this.clearIncludes(guid);
         let filename = guid + ".lua";
         if (guid === "-1") filename = Constants.GLOBAL_FILENAME + ".lua";
