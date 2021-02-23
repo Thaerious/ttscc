@@ -8,7 +8,7 @@ import ErrorFinder from './ErrorFinder.js';
 /**
  * WatchTTS listens to the TTS port for messages and interprets them accordingly.
  */
-class WatchTTS {
+class TTSListener {
 
     constructor() {
         /** wait for TTS to request a connection */
@@ -183,4 +183,4 @@ function get(){
     });
 }
 
-export {WatchTTS, get, MessageParser};
+export {TTSListener, get, MessageParser};

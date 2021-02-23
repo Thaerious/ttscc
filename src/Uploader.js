@@ -13,42 +13,61 @@ class Uploader{
         this.included = [];
     }
 
+    close(){
+        this.socket.close();
+    }
+
+    /**
+     * Upload all GUID script files. 
+     */
     upload(){
-        let socket = new Net.Socket();
-        socket.connect(Constants.WRITE_PORT);
+        this.included = [];
+
+        this.socket = new Net.Socket();
+        this.socket.connect(Constants.WRITE_PORT);
         let message = this.buildMessage();
 
-        socket.on("error", (err)=>{
-            if (err.code === 'ECONNREFUSED') console.log("Connection to TTS refused");
-            else console.log(err);
+        this.socket.on("error", (err)=>{            
+            if (err.code === 'ECONNREFUSED') throw new Error("Connection to TTS refused");
+            throw err;
         });
 
-        socket.on("connect", () => {            
-            socket.write(message);
+        this.socket.on("connect", () => {            
+            this.socket.write(message);
         });
     }
 
-    buildMessage(guid){
+    buildMessage(guids){
         let namesJSON = FS.readFileSync(Path.join(Constants.DATA_DIR, Constants.NAME_FILE));
         let names = JSON.parse(namesJSON);
 
         let msg = {
             messageID: 1,
-            scriptStates:[
-
-            ]
+            scriptStates:[]
         };
 
-        for (let guid in names){
-            let element = {};
-            element.guid = guid;            
-            element.name = names[guid];
-            this.fillElementScript(element);
-            this.fillElementUI(element);
-            msg.scriptStates.push(element);
+        if (guids){
+            for (let guid of guids){
+                let element = this.buildElement(guid, names);
+                msg.scriptStates.push(element);
+            }
+        } else {
+            for (let guid in names){
+                let element = this.buildElement(guid, names);
+                msg.scriptStates.push(element);
+            }
         }
 
         return JSON.stringify(msg);
+    }
+
+    buildElement(guid, names){
+        let element = {};
+        element.guid = guid;            
+        element.name = names[guid];
+        this.fillElementScript(element);
+        this.fillElementUI(element);
+        return element;       
     }
 
     fillElementScript(element){
@@ -59,7 +78,7 @@ class Uploader{
         if (!FS.existsSync(path)) return;
         let data = FS.readFileSync(path);
         let script = data.toString('ascii', 0, data.length);
-        element.script = this.replaceInclude(script);
+        element.script = this.replaceInclude(script, element.guid);
 
         if (!FS.existsSync(Constants.SENT_FILE_DIR)) FS.mkdirSync(Constants.SENT_FILE_DIR);
         FS.writeFileSync(Path.join(Constants.SENT_FILE_DIR, filename), element.script);
@@ -73,9 +92,9 @@ class Uploader{
         if (!FS.existsSync(path)) return;
         let data = FS.readFileSync(path);
         element.ui = data.toString('ascii', 0, data.length);
-    }    
+    }
 
-    replaceInclude(text){        
+    replaceInclude(text, guid){        
         let targetText = "";
         let lines = text.split(OS.EOL);   
         
@@ -83,8 +102,8 @@ class Uploader{
             if (line.match(/^#include [a-zA-Z0-9./]+[ \t]*/)){
                 let filename = line.substring(9).trim();                
                 let includedText = this.getIncludeFile(filename);
-                includedText = this.replaceInclude(includedText);    
-                targetText = targetText + includedText;                 
+                includedText = this.replaceInclude(includedText, guid);    
+                targetText = targetText + includedText;     
             } else {
                 targetText = targetText + line + OS.EOL;                
             }
