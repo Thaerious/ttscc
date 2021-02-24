@@ -24,7 +24,6 @@ class TTSListener {
 
     close(){
         if (this.server) this.server.close();
-        if (this.readSocket) this.readSocket.close();
     }
 
     listen(){
@@ -190,8 +189,7 @@ function get(){
     let message = '{"messageID" : "0"}'
 
     socket.on("error", (err)=>{
-        if (err.code === 'ECONNREFUSED') console.log("Connection to TTS refused");
-        else console.log(err);
+        console.log(err);
     });
 
     socket.on("connect", () => {

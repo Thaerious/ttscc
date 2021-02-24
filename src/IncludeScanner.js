@@ -33,12 +33,15 @@ class IncludeScanner{
     }
 
     /**
-     * Include a set of guids to perform a partial scan.  Omit it to scan all files in the script
-     * directory.
+     * Scan files in the script directory for include statements.
+     * Include a set of guids to perform a partial scan. 
+     * Omit it to scan all GUIDs present in the names.json 
+     * file, which is created when a game is downloaded from TTS.
      * @param {Set} guids 
      */
     scan(guids){
         this.included = [];
+        if (!guids && !FS.existsSync(Path.join(Constants.DATA_DIR, Constants.NAME_FILE))) return;
         let namesJSON = FS.readFileSync(Path.join(Constants.DATA_DIR, Constants.NAME_FILE));
         let names = JSON.parse(namesJSON);
 

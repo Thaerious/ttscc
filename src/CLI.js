@@ -42,6 +42,8 @@ class CLI{
         });
 
         RL.on('close', function() {
+            if (this.uploader) this.uploader.close();
+            if (this.ttsListener) this.ttsListener.close();
             process.exit(0);
         });
     }
@@ -67,6 +69,8 @@ class CLI{
             break;
             case "exit":
             case "x":
+                if (this.uploader) this.uploader.close();
+                if (this.ttsListener) this.ttsListener.close();
                 process.exit(0);
                 break;
         }
