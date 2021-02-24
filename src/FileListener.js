@@ -20,8 +20,6 @@ class FileListener {
         this.includeScanner = includeScanner;
         this.timeout = null;
         this.cb = cb;
-        this.skip = false;
-
         this.start();
     }
 
@@ -44,9 +42,8 @@ class FileListener {
         this.scriptWatcher.on('change', path => this.scriptUpdate(path));
     }
 
-    includeUpdate(filename) {
-        if (this.paused) return;
-        let scriptName = filename.substr(constants.INCLUDE_DIR.length - 1, filename.indexOf("."));
+    includeUpdate(filename) {        
+        let scriptName = filename.substring(constants.INCLUDE_DIR.length - 1, filename.indexOf("."));
         let guids = this.includeScanner.getMap()[scriptName];
         if (!guids) return;
 
@@ -54,11 +51,11 @@ class FileListener {
             this.includeScanner.scan([guid]);
             this.updatedFiles.add(guid);
         }
+        this.setTimer();
     }
 
     scriptUpdate(filename) {
-        if (this.paused) return;
-        let guid = filename.substr(constants.SCRIPT_DIR.length - 1, filename.indexOf("."));
+        let guid = filename.substring(constants.SCRIPT_DIR.length - 1, filename.indexOf("."));
         this.includeScanner.scan([guid]);
         this.updatedFiles.add(guid);
         this.setTimer();
@@ -70,6 +67,7 @@ class FileListener {
             if (this.skip){
                 this.skip = false;
             } else {
+                console.log(this.updatedFiles);
                 this.cb(this.updatedFiles);                
             }
             this.updatedFiles = new Set();
