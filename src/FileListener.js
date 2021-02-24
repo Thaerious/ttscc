@@ -23,10 +23,18 @@ class FileListener {
         this.start();
     }
 
+    /**
+     * Do not trigger an update for the next notification.
+     */
     skipNextUpdate(){
         this.skip = true;
     }
 
+    /**
+     * Begin listening for file changes inthe Include and Script directories.
+     * Note all changes within the delay time will not trigger an update.
+     * Delay time is set in 'constants.UPDATE_DELAY'.
+     */
     start() {
         this.includeWatcher = chokidar.watch(constants.INCLUDE_DIR, {
             ignored: /(^|[\/\\])\../, // ignore dotfiles
@@ -42,9 +50,13 @@ class FileListener {
         this.scriptWatcher.on('change', path => this.scriptUpdate(path));
     }
 
-    includeUpdate(filename) {        
+    includeUpdate(filename) {       
         let scriptName = filename.substring(constants.INCLUDE_DIR.length - 1, filename.indexOf("."));
+        scriptName = scriptName.replaceAll("\\", "/");
         let guids = this.includeScanner.getMap()[scriptName];
+        console.log("'" + scriptName + "' update detected");  
+        console.log(guids);
+        console.log(this.includeScanner.getMap());
         if (!guids) return;
 
         for (let guid of guids) {

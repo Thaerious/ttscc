@@ -20,6 +20,7 @@ class IncludeScanner{
     addInclude(filename, guid){
         let scriptName = guid;        
         if (scriptName === "-1") scriptName = Constants.GLOBAL_FILENAME;
+        filename = filename.replaceAll("\\", "/");
         if (this.includeMap[filename] == undefined) this.includeMap[filename] = [];
         if (this.includeMap[filename].indexOf(guid) == -1) this.includeMap[filename].push(scriptName);
     }

@@ -122,7 +122,7 @@ class Uploader{
             this.included.push(filename);
         }
 
-        contents = contents ?? `---- #include ${filename} file not found`;
+        contents = contents ?? `---x #include ${filename}`; // file not found
         return contents;
     }
 

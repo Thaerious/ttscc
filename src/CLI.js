@@ -62,7 +62,11 @@ class CLI{
             break;
             case "inc":
             case "includes":
-                console.log(this.includeScanner.getMap());
+                if (split.length == 1){
+                    console.log(this.includeScanner.getMap());
+                } else {
+                    console.log(this.includeScanner.getMap()[split[1]]);
+                }
                 break;
             case "resume":
                 this.fileListener.resume();

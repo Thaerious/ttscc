@@ -26,3 +26,12 @@ All the TTS scripts will download into the tts-scripts subdirectory, you can edi
 You can use the "#include filename" directive to insert external script files into your TTS scripts.  It will insert code verbatim at the location of the #include statement.  Mulitple includes of the same name will be ignored.  Your inlclude files need to be located in a /include subdirectory where you ran the watch-tts program. They can have either the .lua or .ttslua extension.  When including the file in code, do not include the extension, only the root path and filename.
 
 You can open & edit all files in the tts-scripts and tts-ui directories, but make sure they are uploaded to the TTS program or they may be overwritten.  The watch-tts program will not overwrite any files in the /include directory.  It is advisable to have the only line in your global.lua file be "#include main" and have a "main.lua" file in your include directory.
+
+Using
+=====
+Start watch-tts in your desired directory in the terminal (powershell).
+Load a game in TTS, a "Game Loaded" message will display in your terminal.
+Any changes to object scripts in /tts-scripts or include scripts in /include will trigger an update (*1).
+
+
+(*1) only include scripts which can be traced to a object script will trigger an update.

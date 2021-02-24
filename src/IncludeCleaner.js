@@ -55,7 +55,11 @@ class IncludeCleaner {
      * @param {String} line 
      */
     processLine(line){
-        if (line.match(/^---[>-] ?#include [a-zA-Z0-9./]+[ \t]*/)) {
+        if (line.match(/^---x ?#include [a-zA-Z0-9./]+[ \t]*/)) {
+            let filename = line.substring(line.indexOf("#") + 8).trim();
+            return `#include ${filename}`;
+        }        
+        else if (line.match(/^---[>-] ?#include [a-zA-Z0-9./]+[ \t]*/)) {
             let filename = line.substring(line.indexOf("#") + 8).trim();
             if (this.lastInclude === null) {
                 this.lastInclude = filename;
