@@ -28,7 +28,6 @@ class Uploader{
         let message = this.buildMessage();
 
         this.socket.on("error", (err)=>{            
-            // if (err.code === 'ECONNREFUSED') throw new Error("Connection to TTS refused");
             console.log(err);
         });
 
