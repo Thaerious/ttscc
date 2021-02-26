@@ -7,6 +7,7 @@ import ErrorFinder from './ErrorFinder.js';
 import IncludeCleaner from './IncludeCleaner.js';
 import FS from "fs";
 import Extractor from './Extractor.js';
+import Injector from './Injector.js';
 
 /**
  * Command Line Interface
@@ -73,12 +74,15 @@ class CLI{
                 let r = await ef.seek(split[1], split[2]);
                 console.log(r);
                 break;
+            case "ex":
             case "extract":
                 // load scripts from the save file
                 new Extractor().extract();
                 break;
+            case "in":
             case "inject":
                 // save scripts to the save file
+                new Injector().inject();
                 break;
             case "exit":
             case "x":

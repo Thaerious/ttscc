@@ -1,4 +1,3 @@
-import { DH_CHECK_P_NOT_SAFE_PRIME } from 'constants';
 import FS from 'fs';
 import Path from 'path';
 import Constants from './constants.js';
@@ -13,7 +12,7 @@ class Extractor{
 
         for(const objectState of json.ObjectStates){
             console.log(objectState);
-            let name = objectState.Name.trim();
+            let name = objectState.Nickname.trim();
             let guid = objectState.GUID;
 
             let dir = Constants.EXTRACT_DIR;
@@ -28,13 +27,8 @@ class Extractor{
 
     clearDirectory(directory) {
         if (!FS.existsSync(directory)) {
-            FS.mkdirSync(directory);
+            FS.mkdirSync(directory, {recursive: true});
         }
-
-        let files = FS.readdirSync(directory);
-        for (const file of files) {
-            FS.unlinkSync(Path.join(directory, file));
-        };
     }
 
 }
