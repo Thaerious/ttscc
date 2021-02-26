@@ -3,3 +3,4 @@ tts-data/
 tts-scripts/
 tts-ui/
 node_modules/
+workspace.*

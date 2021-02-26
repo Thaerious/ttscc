@@ -50,13 +50,11 @@ class FileListener {
         this.scriptWatcher.on('change', path => this.scriptUpdate(path));
     }
 
-    includeUpdate(filename) {       
+    includeUpdate(filename) {    
         let scriptName = filename.substring(constants.INCLUDE_DIR.length - 1, filename.indexOf("."));
         scriptName = scriptName.replaceAll("\\", "/");
         let guids = this.includeScanner.getMap()[scriptName];
         console.log("'" + scriptName + "' update detected");  
-        console.log(guids);
-        console.log(this.includeScanner.getMap());
         if (!guids) return;
 
         for (let guid of guids) {
@@ -79,7 +77,6 @@ class FileListener {
             if (this.skip){
                 this.skip = false;
             } else {
-                console.log(this.updatedFiles);
                 this.cb(this.updatedFiles);                
             }
             this.updatedFiles = new Set();

@@ -17,6 +17,7 @@ class TTSListener {
     constructor(filelistener) {
         if (!filelistener) throw new Error(`NULL parameter: filelistener`);
         this.filelistener = filelistener;
+        this.messageParser = new MessageParser(this.filelistener);
 
         /** wait for TTS to request a connection */
         this.server = new Net.Server();        
@@ -42,8 +43,7 @@ class TTSListener {
     }
 
     setupReadSocket(socket) {
-        this.readSocket = socket;
-        this.messageParser = new MessageParser(this.filelistener);
+        this.readSocket = socket;        
         socket.setEncoding("utf8");
 
         let amalgametedData = "";
@@ -75,39 +75,56 @@ class MessageParser {
         } else {
             this.names = {};
         }
+
+        this.msgQueue = [];
+        this.processing = false;
+    }
+
+    parse(message){
+        this.msgQueue.push(message);
+        if (!this.processing) this.process();
     }
 
     /**
      * Main entry point for incoming messages.
      * @param {object} message
      */
-    async parse(message) {
-        switch (message.messageID) {
-            case 0: // new object push
-                await this.filelistener.skipNextUpdate();
-                await this.pushObjects(message);
-                break;
-            case 1: // game loaded
-                await this.filelistener.skipNextUpdate();
-                await this.gameLoaded(message);
-                break;
-            case 2: // print message
-                console.log("SERVER> " + message.message);
-                break;
-            case 3: // error message
-                let ef = new ErrorFinder();
-                await ef.find(message);
-                ef.report();
-                break;
-            case 4: // custom message (ignored)
-                break;
-            case 5: // return message (ignored)
-                break;
-            case 6: // game saved
-                break;
-            case 7: // object created
-                break;
+    async process() {
+        this.processing = true;
+        while(this.msgQueue.length > 0){
+            let message = this.msgQueue.shift();
+
+            switch (message.messageID) {
+                case 0: // new object push
+                    await this.filelistener.skipNextUpdate();
+                    await this.pushObjects(message);
+                    break;
+                case 1: // game loaded
+                    await this.filelistener.skipNextUpdate();
+                    await this.gameLoaded(message);
+                    break;
+                case 2: // print message
+                    console.log("SERVER> " + message.message);
+                    break;
+                case 3: // error message     
+                    if (message.error !== this.lastError){
+                        let ef = new ErrorFinder();
+                        await ef.find(message);                
+                        ef.report();
+                        this.lastError = message.error;
+                    }      
+                    break;
+                case 4: // custom message (ignored)
+                    break;
+                case 5: // return message (ignored)
+                    break;
+                case 6: // game saved
+                    break;
+                case 7: // object created
+                    break;
+            }
         }
+        this.processing = false;
     }
 
     /**
@@ -131,6 +148,9 @@ class MessageParser {
         console.log("Game Loaded: " + message.savePath);
         this.clearDirectory(Constants.SCRIPT_DIR);
         this.clearDirectory(Constants.UI_DIR);
+        this.clearDirectory(Constants.RECV_FILE_DIR);
+
+        FS.writeFileSync(Constants.SAVE_FILE_NAME, message.savePath);
 
         for (let element of message.scriptStates){
             await this.processGameElement(element);            
@@ -149,6 +169,7 @@ class MessageParser {
         if (element.guid === "-1") filename = Constants.GLOBAL_FILENAME;
 
         if (element.script !== undefined){
+            FS.writeFileSync(Path.join(Constants.RECV_FILE_DIR, filename + ".lua"), element.script);
             let cleanText = await new IncludeCleaner().processString(element.script);
             FS.writeFileSync(Path.join(Constants.SCRIPT_DIR, filename + ".lua"), cleanText);
         }

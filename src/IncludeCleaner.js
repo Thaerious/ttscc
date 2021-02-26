@@ -14,7 +14,7 @@ class IncludeCleaner {
     /**
      * Any text that had previously been inserted by the Uploader.fillElementScript
      * method will be removed and replaced with a #include directive.
-     * @param {*} string 
+     * @param {String} string The incoming script text
      */
     async processString(string){
         let rstring = "";
@@ -55,16 +55,15 @@ class IncludeCleaner {
      * @param {String} line 
      */
     processLine(line){
+        
         if (line.match(/^---x ?#include [a-zA-Z0-9./]+[ \t]*/)) {
             let filename = line.substring(line.indexOf("#") + 8).trim();
-            return `#include ${filename}`;
+            if (this.lastInclude === null) return `#include ${filename}`;
         }        
-        else if (line.match(/^---[>-] ?#include [a-zA-Z0-9./]+[ \t]*/)) {
+        else if (line.match(/^---[>-] ?#include [a-zA-Z0-9./]+[ \t]*/) && this.lastInclude === null) {
             let filename = line.substring(line.indexOf("#") + 8).trim();
-            if (this.lastInclude === null) {
-                this.lastInclude = filename;
-                return `#include ${filename}`;
-            }
+            this.lastInclude = filename;
+            return `#include ${filename}`;
         }
         else if (line.match(/^---[<-] ?#include [a-zA-Z0-9./]+[ \t]*/)) {
             let filename = line.substring(line.indexOf("#") + 8).trim();

@@ -3,6 +3,10 @@ import Uploader from "./Uploader.js"
 import {TTSListener, get, MessageParser} from "./TTSListener.js";
 import FileListener from './FileListener.js';
 import IncludeScanner from './IncludeScanner.js';
+import ErrorFinder from './ErrorFinder.js';
+import IncludeCleaner from './IncludeCleaner.js';
+import FS from "fs";
+import Extractor from './Extractor.js';
 
 /**
  * Command Line Interface
@@ -13,19 +17,13 @@ class CLI{
         this.uploader = new Uploader();
         this.includeScanner = new IncludeScanner();
         this.fileListener = new FileListener(this.includeScanner, (guids)=>this.uploader.upload(guids));
-
-        // this.fileListener = new FileListener(this.includeScanner, (guids)=>{
-        //     console.log("List of scripts needing updates");
-        //     console.log(guids);
-        // });
-
         this.ttsListener = new TTSListener(this.fileListener);
     }
 
     start(){
         this.ttsListener.listen();
         const RL = Readline.createInterface(process.stdin, process.stdout);
-        RL.setPrompt('TTSL> ');
+        RL.setPrompt('WTTS> ');
         RL.prompt();
 
         RL.on('line', line => {
@@ -48,18 +46,16 @@ class CLI{
         });
     }
 
-    command(line){
+    async command(line){
         let split = line.split(/[ ]+/);
 
         switch (split[0].trim()){
             case "get":
                 get();
                 break;
-            break;
             case "put":
                 this.uploader.upload();
                 break;
-            break;
             case "inc":
             case "includes":
                 if (split.length == 1){
@@ -70,7 +66,20 @@ class CLI{
                 break;
             case "resume":
                 this.fileListener.resume();
-            break;
+                break;            
+            case "find":
+                // used to test error fuctionality
+                let ef = new ErrorFinder();
+                let r = await ef.seek(split[1], split[2]);
+                console.log(r);
+                break;
+            case "extract":
+                // load scripts from the save file
+                new Extractor().extract();
+                break;
+            case "inject":
+                // save scripts to the save file
+                break;
             case "exit":
             case "x":
                 if (this.uploader) this.uploader.close();
