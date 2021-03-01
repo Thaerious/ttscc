@@ -1,6 +1,7 @@
 export default {
     SCRIPT_DIR : "./tts-scripts",
     EXTRACT_DIR : "./tts-objects",
+    EXTRACT_DICTIONARY_FILE : "dictionary.json",
     UI_DIR : "./tts-ui",
     DATA_DIR : "./tts-data",
     SENT_FILE_DIR : "./tts-data/sent",

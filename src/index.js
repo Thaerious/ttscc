@@ -8,6 +8,7 @@ if (process.argv.length >= 3){
         FS.rmdirSync(Constants.SCRIPT_DIR, { recursive: true });
         FS.rmdirSync(Constants.UI_DIR, { recursive: true });
         FS.rmdirSync(Constants.DATA_DIR, { recursive: true });
+        FS.rmdirSync(Constants.EXTRACT_DIR, { recursive: true });
         process.exit(0);
     }
 }

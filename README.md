@@ -40,7 +40,12 @@ Load a game in TTS, a "Game Loaded" message will display in your terminal.
 Any changes to object scripts in /tts-scripts or include scripts in /include will trigger an update (*1).
 Exit the program by typing 'x' or 'exit' on the command line.
 You can view all tracked files by typing the 'inc' or 'include' command.
-The 'put' command will cause TTS to save and play.
+The 'load' command will cause TTS to save and play.  Note, this does not load from a saved file.
+The 'put' command will send the current script files and cause TTS to save and play.
 The 'get' command will request download of all object scripts, use when you start watch-tts after TTS is already running (or just reload the game).
+
+The 'extract' (ex) command will extract scripts from the save file into the tts-objects directory.
+the 'inject' (in) command will write scripts from the tts-objects directory into the save file.
+You must manually reload the file in TTS to enact any changes.
 
 (*1) only include scripts which can be traced to a object script will trigger an update.

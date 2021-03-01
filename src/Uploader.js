@@ -2,41 +2,50 @@ import Constants from './constants.js';
 import FS from 'fs';
 import Path from 'path';
 import Net from 'net';
-import OS from 'os';
+import Includer from "./Includer.js";
 
 class Uploader{
     constructor(){
         this.options = {
             multiple_includes : false
         }
-
-        this.included = [];
     }
 
-    close(){
-        
-    }
-
-    /**
-     * Upload all GUID script files. 
-     */
-    upload(){
-        this.included = [];
-
+    reload(){
         this.socket = new Net.Socket();
         this.socket.connect(Constants.WRITE_PORT);
-        let message = this.buildMessage();
+
+        let msg = {
+            messageID: 1
+        };
 
         this.socket.on("error", (err)=>{            
             console.log(err);
         });
 
         this.socket.on("connect", () => {            
+            this.socket.write(JSON.stringify(msg));
+        });
+    }
+
+    /**
+     * Upload all GUID script files. 
+     */
+    upload(){
+        this.socket = new Net.Socket();
+        this.socket.connect(Constants.WRITE_PORT);
+
+        this.socket.on("error", (err)=>{            
+            console.log(err);
+        });
+
+        this.socket.on("connect", () => {            
+            const message = this.buildMessage();
             this.socket.write(message);
         });
     }
 
-    buildMessage(guids){
+    buildMessage(){
         let namesJSON = FS.readFileSync(Path.join(Constants.DATA_DIR, Constants.NAME_FILE));
         let names = JSON.parse(namesJSON);
 
@@ -45,16 +54,9 @@ class Uploader{
             scriptStates:[]
         };
 
-        if (guids){
-            for (let guid of guids){
-                let element = this.buildElement(guid, names);
-                msg.scriptStates.push(element);
-            }
-        } else {
-            for (let guid in names){
-                let element = this.buildElement(guid, names);
-                msg.scriptStates.push(element);
-            }
+        for (let guid in names){
+            let element = this.buildElement(guid, names);
+            msg.scriptStates.push(element);
         }
 
         return JSON.stringify(msg);
@@ -66,7 +68,7 @@ class Uploader{
         element.name = names[guid];
         this.fillElementScript(element);
         this.fillElementUI(element);
-        return element;       
+        return element;
     }
 
     fillElementScript(element){
@@ -77,7 +79,7 @@ class Uploader{
         if (!FS.existsSync(path)) return;
         let data = FS.readFileSync(path);
         let script = data.toString('ascii', 0, data.length);
-        element.script = this.replaceInclude(script, element.guid);
+        element.script = new Includer().replaceInclude(script, element.guid);
 
         if (!FS.existsSync(Constants.SENT_FILE_DIR)) FS.mkdirSync(Constants.SENT_FILE_DIR);
         FS.writeFileSync(Path.join(Constants.SENT_FILE_DIR, filename), element.script);
@@ -91,53 +93,6 @@ class Uploader{
         if (!FS.existsSync(path)) return;
         let data = FS.readFileSync(path);
         element.ui = data.toString('ascii', 0, data.length);
-    }
-
-    replaceInclude(text, guid){        
-        let targetText = "";
-        let lines = text.split(OS.EOL);   
-        
-        for (let line of lines){
-            if (line.match(/^#include [a-zA-Z0-9./]+[ \t]*/)){
-                let filename = line.substring(9).trim();                
-                let includedText = this.getIncludeFile(filename);
-                includedText = this.replaceInclude(includedText, guid);    
-                targetText = targetText + includedText;     
-            } else {
-                targetText = targetText + line + OS.EOL;                
-            }
-        }        
-        return targetText;
-    }
-
-    getIncludeFile(filename){
-        if (this.included.indexOf(filename) !== -1 && this.options.multiple_includes === false) return "";
-
-        let contents = null;
-        contents = contents ?? this.getIncludeExt(filename, ".lua");
-        contents = contents ?? this.getIncludeExt(filename, ".ttslua");
-
-        if (contents !== null){
-            this.included.push(filename);
-        }
-
-        contents = contents ?? `---x #include ${filename}`; // file not found
-        return contents;
-    }
-
-    getIncludeExt(filename, ext){
-        if (FS.existsSync(Path.join(Constants.INCLUDE_DIR, filename + ext))){
-            let data = FS.readFileSync(Path.join(Constants.INCLUDE_DIR, filename + ext));
-            let contents = data.toString('ascii', 0, data.length);
-            contents = `---> #include ${filename}` 
-                     + OS.EOL
-                     + contents 
-                     + OS.EOL 
-                     + `---< #include ${filename}`
-                     ;
-            return contents;
-        } 
-        return null;
     }
 }
 

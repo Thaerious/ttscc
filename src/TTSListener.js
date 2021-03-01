@@ -98,13 +98,16 @@ class MessageParser {
                 case 0: // new object push
                     await this.filelistener.skipNextUpdate();
                     await this.pushObjects(message);
+                    this.lastError = null;
                     break;
                 case 1: // game loaded
                     await this.filelistener.skipNextUpdate();
                     await this.gameLoaded(message);
+                    this.lastError = null;
                     break;
                 case 2: // print message
                     console.log("SERVER> " + message.message);
+                    this.lastError = null;
                     break;
                 case 3: // error message     
                     if (message.error !== this.lastError){
@@ -182,7 +185,7 @@ class MessageParser {
 
     updateNameFile(){
         let json = JSON.stringify(this.names);
-        FS.writeFileSync(Path.join(Constants.DATA_DIR, Constants.NAME_FILE), JSON.stringify(this.names));
+        FS.writeFileSync(Path.join(Constants.DATA_DIR, Constants.NAME_FILE), JSON.stringify(this.names, null, 2));
     }
 
     /**
@@ -191,7 +194,7 @@ class MessageParser {
      */
     clearDirectory(directory) {
         if (!FS.existsSync(directory)) {
-            FS.mkdirSync(directory);
+            FS.mkdirSync(directory, {recursive : true});
         }
 
         let files = FS.readdirSync(directory);

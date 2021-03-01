@@ -2,6 +2,9 @@ import Constants from "./constants.js";
 import FS from 'fs';
 import Path from 'path';
 import ReadLine from 'readline';
+import Injector from "./Injector.js";
+import Extractor from "./Extractor.js";
+import StrToStream from "string-to-stream";
 
 /**
  * Convert a global error from TTS to a local error.
@@ -13,8 +16,14 @@ class ErrorFinder {
         this.errorMessage = errorMessage;
         let split = errorMessage.error.split(":");
 
+        if (split.length === 1) {
+            this.message = errorMessage.error;
+            return;
+        }
+
         this.message = split[2];
         this.location = split[1].substr(1, split[1].length - 2);
+        this.path = "";
 
         this.srcLineNumber = this.location.split(",")[0];
         this.chars = this.location.split(",")[1];
@@ -26,22 +35,47 @@ class ErrorFinder {
         console.log("------------------------------");
         console.log("Error: " + this.message);
         console.log("source (guid:line) " + this.errorMessage.guid + ":" + this.srcLineNumber);
+        console.log("file: " + this.path);
         console.log(this.errorReport);
-        console.log("> " + this.errorLine.trim());
+        console.log("> " + this.errorLine);
         console.log("------------------------------");
     }
 
+    /**
+     * Given a guid and linenumber, find the corresponding line number in source files.
+     * @param {*} guid 
+     * @param {*} lineNumber 
+     */
     async seek(guid, lineNumber) {
         let filename = guid + ".lua";
         if (guid === "-1") filename = Constants.GLOBAL_FILENAME + ".lua";
 
         this.targetLine = parseInt(lineNumber);
+        const ex = new Extractor();
+        await ex.extract();
 
-        if (!FS.existsSync(Path.join(Constants.SENT_FILE_DIR, filename))) {
-            throw new Error("Error file not found: " + Path.join(Constants.SCRIPT_DIR, filename));
+        // Is a script file
+        if (FS.existsSync(Path.join(Constants.SENT_FILE_DIR, filename))) {
+            this.path = Path.join(Constants.SENT_FILE_DIR, filename);
+            const stream = FS.createReadStream(this.path);            
+            const r = await this.seekFile(stream);
+            stream.close();
+            return r;
+        }
+        // Is an object file
+        else if (ex.getTTSObject(guid)) {
+            this.path = Injector.filepath(guid);
+            const stream = StrToStream(ex.getTTSObject(guid).LuaScript);
+            return await this.seekFile(stream);
+        }
+        else {
+            console.log("Script file not found: " + Path.join(Constants.SCRIPT_DIR, filename));
         }
 
-        return await this.seekFile(Path.join(Constants.SENT_FILE_DIR, filename));
+    }
+
+    async seekText(text) {
+
     }
 
     /**
@@ -49,13 +83,12 @@ class ErrorFinder {
      * Reports the number of lines since latest start of an include.
      * @param {string} filename 
      */
-    async seekFile(filename) {
+    async seekFile(readStream) {
         let lineStack = [];
         let includeStack = [];
-        let currentInclude = "";
+        let currentInclude = this.path;
         let localLine = 0;
         let globalLine = 0;
-        let readStream = FS.createReadStream(filename);
 
         let rl = ReadLine.createInterface({
             input: readStream,
@@ -67,26 +100,26 @@ class ErrorFinder {
             localLine = localLine + 1;
 
             if (globalLine === this.targetLine) {
-                this.errorLine = line;
-                readStream.close();
+                this.errorLine = line;                
                 return `${currentInclude}:${localLine}`;
             }
 
             if (line.match(/^---[>-] ?#include [a-zA-Z0-9./]+[ \t]*/)) {
+                includeStack.push(currentInclude);
+                console.log("push " + currentInclude);
                 currentInclude = line.substring(line.indexOf(" ")).trim();
                 let path = this.getIncludePath(currentInclude);
-                lineStack.push(localLine);
-                includeStack.push(currentInclude);
+                lineStack.push(localLine);                                
                 localLine = 0;
             }
 
             if (line.match(/^---[<-] ?#include [a-zA-Z0-9./]+[ \t]*/)) {
                 localLine = lineStack.pop();
                 currentInclude = includeStack.pop();
+                console.log("pop " + currentInclude);
             }
         }
-
-        readStream.close();
+        
         return undefined;
     }
 
