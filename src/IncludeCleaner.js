@@ -1,20 +1,25 @@
 import ReadLine from 'readline';
 import OS from 'os';
 import { Readable } from 'stream';
+import { threadId } from 'worker_threads';
 
 /**
- * Replaces included text with the #include directive.
-
+ * Removes included text.  Any text between '--->' and '---<' gets removed.
+ * Uncomments include directives ('---- #include').
  */
 class IncludeCleaner {
+    /**
+     * 
+     * @param {*} includes a map of include -> script
+     */
     constructor() {
-        this.lastInclude = null;
+        this.includeDepth = 0;
     }
 
     /**
      * Any text that had previously been inserted by the Uploader.fillElementScript
      * method will be removed and replaced with a #include directive.
-     * @param {String} string The incoming script text
+     * @param {String} string The cleaned incoming script text
      */
     async processString(string){
         let rstring = "";
@@ -23,59 +28,57 @@ class IncludeCleaner {
     }
 
     /**
-     * Workhorse method for 'processString()', is kept seperate for testing.
+     * Workhorse method for 'processString()', kept seperate for testing.
      * Takes in document text and processes it line by line.
      * Will call the 'cb' function on each line to be written out.
      * @param {*} string the document text
      * @param {*} cb cb(string) is called when a line should be written out.
      */
     async readString(string, cb) {
-        cb = cb ?? function(){};
+        this.writeLine = cb ?? function(){};
 
         let rl = ReadLine.createInterface({
             input: Readable.from(string),
             crlfDelay: Infinity
         });
 
-        for await (const line of rl) {
-            let processedLine = this.processLine(line);
-            if (processedLine !== undefined) cb(processedLine);
-        }
+        for await (const line of rl) this.processLine(line);
+    }
+
+    includeStart(){
+        this.includeDepth = this.includeDepth + 1;
+    }
+
+    includeLine(line){
+        if (this.includeDepth == 0){
+            console.log(line);
+            this.writeLine(line);
+        } 
+        else console.log("SKIP")
+    }
+
+    includeEnd(){
+        this.includeDepth = this.includeDepth - 1;
     }
 
     /**
-     * Updates the classes state based on a line of text.
-     * If the line is an include start comment, find all text
-     * until the matching include end comment and replace it with
-     * an #include directive.
-     * 
-     * This method returs the line that should be written out as a
-     * replacement ot the line passed in.  If undefined is returnded,
-     * no line should be written.
      * @param {String} line 
      */
-    processLine(line){
-        
-        if (line.match(/^---x ?#include [a-zA-Z0-9./]+[ \t]*/)) {
-            let filename = line.substring(line.indexOf("#") + 8).trim();
-            if (this.lastInclude === null) return `#include ${filename}`;
-        }        
-        else if (line.match(/^---[>-] ?#include [a-zA-Z0-9./]+[ \t]*/) && this.lastInclude === null) {
-            let filename = line.substring(line.indexOf("#") + 8).trim();
-            this.lastInclude = filename;
-            return `#include ${filename}`;
+    processLine(line){        
+        // Beginning of include
+        if (line.match(/^--->/)) {
+            this.includeStart();
         }
-        else if (line.match(/^---[<-] ?#include [a-zA-Z0-9./]+[ \t]*/)) {
-            let filename = line.substring(line.indexOf("#") + 8).trim();
-            if (filename === this.lastInclude){
-                this.lastInclude = null;
-            } 
-            return undefined;
+        // end of include
+        else if (line.match(/^---</)) {
+            this.includeEnd();
         }
-        else if (this.lastInclude === null) {
-            return(line);
+        else if (line.match(/^---- ?#include/)) {
+            if (this.includeDepth <= 0) this.writeLine(line.slice(5));
         }
-        return undefined;
+        else if (this.includeDepth <= 0) {
+            this.writeLine(line);
+        } 
     }
 }
 

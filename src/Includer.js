@@ -14,7 +14,7 @@ class Includer{
 
     replaceInclude(text, guid){        
         let targetText = "";
-        let lines = text.split(OS.EOL);   
+        let lines = text.split(OS.EOL);
         
         for (let line of lines){
             if (line.match(/^#include [a-zA-Z0-9./]+[ \t]*/)){
@@ -33,6 +33,7 @@ class Includer{
         if (this.included.indexOf(filename) !== -1 && this.options.multiple_includes === false) return "";
 
         let contents = null;
+        contents = contents ?? this.getIncludeExt(filename, ".tua");
         contents = contents ?? this.getIncludeExt(filename, ".lua");
         contents = contents ?? this.getIncludeExt(filename, ".ttslua");
 
@@ -40,7 +41,7 @@ class Includer{
             this.included.push(filename);
         }
 
-        contents = contents ?? `---x #include ${filename}`; // file not found
+        contents = contents ?? `---x file not found #include ${filename}`;
         return contents;
     }
 
@@ -55,7 +56,7 @@ class Includer{
                      + `---< #include ${filename}`
                      ;
             return contents;
-        } 
+        }
         return null;
     }
 }

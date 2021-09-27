@@ -2,7 +2,7 @@ import Constants from "./constants.js";
 import FS from 'fs';
 import Path from 'path';
 import ReadLine from 'readline';
-import Injector from "./Injector.js";
+import Packer from "./Packer.js";
 import Extractor from "./Extractor.js";
 import StrToStream from "string-to-stream";
 
@@ -64,7 +64,7 @@ class ErrorFinder {
         }
         // Is an object file
         else if (ex.getTTSObject(guid)) {
-            this.path = Injector.filepath(guid);
+            this.path = Packer.filepath(guid);
             const stream = StrToStream(ex.getTTSObject(guid).LuaScript);
             return await this.seekFile(stream);
         }

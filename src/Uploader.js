@@ -4,13 +4,20 @@ import Path from 'path';
 import Net from 'net';
 import Includer from "./Includer.js";
 
+/**
+ * Upload scripts from project directories to a live TTS game.
+ */
 class Uploader{
+
     constructor(){
         this.options = {
             multiple_includes : false
         }
     }
 
+    /**
+     * 
+    **/
     reload(){
         this.socket = new Net.Socket();
         this.socket.connect(Constants.WRITE_PORT);

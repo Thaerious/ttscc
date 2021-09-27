@@ -7,8 +7,12 @@ import ErrorFinder from './ErrorFinder.js';
 import IncludeCleaner from './IncludeCleaner.js';
 import FS from "fs";
 import Extractor from './Extractor.js';
-import Injector from './Injector.js';
+import Packer from './Packer.js';
 import Constants from './constants.js';
+import Path from 'path';
+import {download, listenOnce} from "./TTSInterface.js";
+import constants from './constants.js';
+import StateExtractor from './StateExtractor.js';
 
 /**
  * Command Line Interface
@@ -16,13 +20,36 @@ import Constants from './constants.js';
  */
 class CLI{
     constructor(){
-        this.uploader = new Uploader();
-        this.includeScanner = new IncludeScanner();
-        this.fileListener = new FileListener(this.includeScanner, (guids)=>this.uploader.upload(guids));
-        this.ttsListener = new TTSListener(this.fileListener);
+        // this.uploader = new Uploader();
+        // this.includeScanner = new IncludeScanner();
+        // this.fileListener = new FileListener(this.includeScanner, (guids)=>this.uploader.upload(guids));
+        // this.ttsListener = new TTSListener(this.fileListener);
     }
 
-    start(){
+    start(args){
+        if (args.length <= 0){
+            console.log("SYNOPSIS");
+            console.log("\tttscc [OPTIONS]");
+            console.log("\n");
+            console.log("DESCRIPTION");
+            console.log("\textract [source_file] [target_directory]");
+            console.log("\t  - retrieve scripts from the source game file and put into project directories");
+            console.log("\n");
+            console.log("\tpack [game_file_name] [project_directory]");
+            console.log("\t  - retrieve scripts from directories and insert into game file");
+            console.log("\n");
+            console.log("\tclean [target_directory]");
+            console.log("\t  - remove project directories from target directory");
+            console.log("\n");
+            console.log("\tdownload [target_directory]");
+            console.log("\t  - download and extract the game currently loaded in TTS");
+
+            process.exit();
+        }
+        this.command(args);
+    }
+
+    listen(){
         this.ttsListener.listen();
         const RL = Readline.createInterface(process.stdin, process.stdout);
         RL.setPrompt('WTTS> ');
@@ -48,10 +75,12 @@ class CLI{
         });
     }
 
-    async command(line){
-        let split = line.split(/[ ]+/);
+    async command(args){
+        let projectDirectory = ".";
+        let targetFile = constants.SAVE_FILE_NAME;
 
-        switch (split[0].trim()){
+        console.log(args);
+        switch (args[0].trim()){
             case "get":
                 get();
                 break;
@@ -63,10 +92,10 @@ class CLI{
                 break;                
             case "inc":
             case "includes":
-                if (split.length == 1){
+                if (args.length == 1){
                     console.log(this.includeScanner.getMap());
                 } else {
-                    console.log(this.includeScanner.getMap()[split[1]]);
+                    console.log(this.includeScanner.getMap()[args[1]]);
                 }
                 break;
             case "resume":
@@ -75,27 +104,45 @@ class CLI{
             case "find":
                 // used to test error fuctionality
                 let ef = new ErrorFinder();
-                let r = await ef.seek(split[1], split[2]);
+                let r = await ef.seek(args[1], args[2]);
                 console.log(r);
                 break;
-            case "ex":
+            case "e":
             case "extract":
-                // load scripts from the save file
+                // cli extract [source] [destination]
+                // extract scripts from the save file into the project directory
+                projectDirectory = args[2] ?? ".";
                 const ex = new Extractor()
-                await ex.extract();
-                await ex.writeOut();
+                await ex.load(args[1]).extract();
+                await ex.writeOut(projectDirectory);
+
+                const stExt = new StateExtractor();
+                stExt.game = ex.game;
+                await stExt.extract();
+                await stExt.writeOut(projectDirectory);
+
                 console.log("extracted object count: " + Object.keys(ex.library).length);
                 break;
-            case "in":
-            case "inject":
+            case "p":
+            case "pack":
                 // save scripts to the save file
-                new Injector().inject();
+                projectDirectory = args[2] ?? ".";
+                targetFile = args[1] ?? "a.json";
+                new Packer().inject(projectDirectory).write(targetFile);
                 break;
+            case "d":
+            case "download":
+                // save scripts to the save file
+                await download();
+            break;         
+            case "listen":
+                console.log(await listenOnce());
+            break;       
             case "clean":
-                if (FS.existsSync(Constants.SCRIPT_DIR)) FS.rmSync(Constants.SCRIPT_DIR, { recursive: true });
-                if (FS.existsSync(Constants.UI_DIR)) FS.rmSync(Constants.UI_DIR, { recursive: true });
-                if (FS.existsSync(Constants.DATA_DIR)) FS.rmSync(Constants.DATA_DIR, { recursive: true });
-                if (FS.existsSync(Constants.EXTRACT_DIR)) FS.rmSync(Constants.EXTRACT_DIR, { recursive: true });
+                projectDirectory = args[1] ?? ".";
+                for (let dir of Constants.CLEAN){
+                    cleanIf(projectDirectory, dir);
+                }
                 break;
             case "exit":
             case "x":
@@ -104,6 +151,12 @@ class CLI{
                 break;
         }
     }
+}
+
+function cleanIf(root, dir){
+    const path = Path.join(root, dir);
+    console.log("removing directory: " + path);
+    if (FS.existsSync(path)) FS.rmSync(path, { recursive: true });
 }
 
 export default CLI;
