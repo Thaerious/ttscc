@@ -1,38 +1,16 @@
-import Constants from './constants.js';
+import Constants from './include/constants.js';
 import FS from 'fs';
 import Path from 'path';
 import Net from 'net';
-import Includer from "./Includer.js";
+import Injecter from "./Injecter.js";
 
 /**
  * Upload scripts from project directories to a live TTS game.
  */
-class Uploader{
+class Uploader extends Injecter{
 
     constructor(){
-        this.options = {
-            multiple_includes : false
-        }
-    }
-
-    /**
-     * 
-    **/
-    reload(){
-        this.socket = new Net.Socket();
-        this.socket.connect(Constants.WRITE_PORT);
-
-        let msg = {
-            messageID: 1
-        };
-
-        this.socket.on("error", (err)=>{            
-            console.log(err);
-        });
-
-        this.socket.on("connect", () => {            
-            this.socket.write(JSON.stringify(msg));
-        });
+        super();
     }
 
     /**
@@ -52,54 +30,44 @@ class Uploader{
         });
     }
 
+    /**
+     * Create the JSON message for TSS save & play.
+     * @returns
+     */
     buildMessage(){
-        let namesJSON = FS.readFileSync(Path.join(Constants.DATA_DIR, Constants.NAME_FILE));
-        let names = JSON.parse(namesJSON);
+        const dictionary = this.getDictionary();
 
         let msg = {
             messageID: 1,
             scriptStates:[]
         };
 
-        for (let guid in names){
-            let element = this.buildElement(guid, names);
-            msg.scriptStates.push(element);
+        for (let guid in dictionary){
+            const element = this.buildElement(guid, dictionary);
+            if (element) msg.scriptStates.push(element);
         }
 
         return JSON.stringify(msg);
     }
 
-    buildElement(guid, names){
+    buildElement(guid, dictionary){
+        const filename = dictionary[guid];
+        const path = Path.join(
+            this.projectDirectory,
+            Constants.PACKED_DIRECTORY,
+            filename + ".tua"
+        );
+
+        if (!FS.existsSync(path)) return undefined;
+
         let element = {};
-        element.guid = guid;            
-        element.name = names[guid];
-        this.fillElementScript(element);
-        this.fillElementUI(element);
+        element.guid = guid;
+        element.name = dictionary[guid];
+
+        let data = FS.readFileSync(path);
+        element.script = data.toString('ascii', 0, data.length);
+
         return element;
-    }
-
-    fillElementScript(element){
-        let filename = element.guid + ".lua";
-        if (element.guid === "-1") filename = Constants.GLOBAL_FILENAME + ".lua";
-
-        let path = Path.join(Constants.SCRIPT_DIR, filename);
-        if (!FS.existsSync(path)) return;
-        let data = FS.readFileSync(path);
-        let script = data.toString('ascii', 0, data.length);
-        element.script = new Includer().replaceInclude(script, element.guid);
-
-        if (!FS.existsSync(Constants.SENT_FILE_DIR)) FS.mkdirSync(Constants.SENT_FILE_DIR);
-        FS.writeFileSync(Path.join(Constants.SENT_FILE_DIR, filename), element.script);
-    }
-
-    fillElementUI(element){
-        let filename = element.guid + ".xml";
-        if (element.guid === "-1") filename = Constants.GLOBAL_FILENAME + ".xml";
-
-        let path = Path.join(Constants.UI_DIR, filename);
-        if (!FS.existsSync(path)) return;
-        let data = FS.readFileSync(path);
-        element.ui = data.toString('ascii', 0, data.length);
     }
 }
 

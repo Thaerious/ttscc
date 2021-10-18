@@ -13,6 +13,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "@thaerious/parseargs": "^0.3.0",
     "chokidar": "^3.5.1",
     "string-to-stream": "^3.0.1",
     "tua": "file:../tua"

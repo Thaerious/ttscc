@@ -1,7 +1,6 @@
 import ReadLine from 'readline';
 import OS from 'os';
 import { Readable } from 'stream';
-import { threadId } from 'worker_threads';
 
 /**
  * Removes included text.  Any text between '--->' and '---<' gets removed.
@@ -51,10 +50,8 @@ class IncludeCleaner {
 
     includeLine(line){
         if (this.includeDepth == 0){
-            console.log(line);
             this.writeLine(line);
         } 
-        else console.log("SKIP")
     }
 
     includeEnd(){
