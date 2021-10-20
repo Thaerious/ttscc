@@ -1,0 +1,17 @@
+1) Can insert (pack) scripts from a directory into a game file.
+  a) Looks in 'tts-src/script/**/*.tua' for source files.
+  b) Source filename format is the guid followed by '.tua' (ie bebb58.tua).
+  c) Source files can exist in sub-directories.
+  d) Include statements in scripts get replaced with the included file (tua project).
+  e) Scripts will be inserted into the scriptless game file created by the 'extract' operation.
+
+2) Can extract scripts from a game file and put them into a directory structure.
+  a) Will place files into subdirectories based upon the object nickname.
+    i) nickname will be converted to all lower case with spaces replaced by underscores.
+  b) The global script will be in a file called global.tua in the root directory.
+  c) Empty scripts will be placed in the 'tts-src/empty' directory with the same subdirectory format as above.
+  d) All includes will be stripped from the scripts.
+  e) The game file get's saved without any scripts, this will be used for 'pack' operations.
+
+3) Can live upload scripts to a running game.
+  a) Does not automatically pack the game file.

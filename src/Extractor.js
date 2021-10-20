@@ -7,116 +7,67 @@ import IncludeCleaner from './IncludeCleaner.js';
  * Extract LUA scripts from a game file.
  **/
 class Extractor{
-    constructor(){
-        this.guidLookup = {}; // guid -> filename
-        this.library    = {}; // guid -> object state
-    }
-
     /**
-     * Extracts scripts from game file.
-     * @param {*} filename save descripted game file here
-     * @returns 
-     */
-    async extract(){        
-        if (!this.json) throw new Error("Game file not set.");
-
-        await this.extractFromObject(this.json, Constants.GLOBAL_FILENAME);
-
-        if (!FS.existsSync(Constants.PROJECT_FILES_DIR)) FS.mkdirSync(Constants.PROJECT_FILES_DIR, {recursive : true});
-        if (!FS.existsSync(Constants.SCRIPT_DIR)) FS.mkdirSync(Constants.SCRIPT_DIR, {recursive : true});
-
-        FS.writeFileSync(
-            Path.join(Constants.PROJECT_FILES_DIR, Constants.EXTRACT_DICTIONARY_FILE), 
-            JSON.stringify(this.guidLookup, null, 2)
-        );
-
-        return this;
-    }
-
-    /**
-     * Extract scripts from object and all contained objects.
+     * Extract scripts from object and all contained objects recursively.
      * Looks in either ObjectStates or ContainedObjects field to recurse.
-     * @param {*} objectState 
+     * @param {*} objectState
      * @param {*} srcname set to override nickname extraction
+     * @returns An object with guid->script pairs.
      */
-    async extractFromObject(objectState, srcname){
-        const name = srcname ?? this.getFilename(objectState);
-        const guid = objectState.GUID;
-        this.guidLookup[guid] = name;
-        this.library[guid] = objectState;
-
+     static extract(objectState){
+        let library = {};
+        library[objectState.GUID ?? -1] = objectState;
         const objectStates = objectState.ObjectStates ?? objectState.ContainedObjects;
 
-        if (objectStates){
-            for(const containedObject of objectStates){
-                await this.extractFromObject(containedObject);
-            }
+        for(const containedObject of objectStates ?? []){
+            library = {...library, ...Extractor.extract(containedObject)};
         }
-    }
 
-    /**
-     * Determine an objects filename from it's nickname & guid.
-     * @param {*} objectState 
-     * @returns 
-     */
-    getFilename(objectState){
-        let rawName = objectState.Nickname.trim();
-        let parsedName = rawName.replaceAll(/[ ]/g, "_");
-        return `${parsedName}.${objectState.GUID}.tua`;
+        return library;
     }
 
     /**
      * Write the script objects to the output directory.
      * Writes all non-empty scripts to Constants.SCRIPT_DIR.
      * Writes all empty scripts to Constants.EMPTY_SCRIPT_DIR.
-     * 
      */
-    async writeOut(projectDirectory){
+    async static writeOut(projectDirectory, library){
         /* write out scripts from objects & remove scripts from objects */
-        for (const guid in this.library){
-            const objectState = this.library[guid];
-            const name = this.guidLookup[guid];
+        for (const guid in library){
+            const objectState = library[guid];
+            const name = getFilename(objectState);
             const savedScript = objectState.LuaScript ?? "";
             const cleanedScript = await new IncludeCleaner().processString(savedScript); 
-            this.writeScript(projectDirectory, name, cleanedScript);
+            Extractor.writeScript(projectDirectory, name, cleanedScript.trim());
             objectState.LuaScript = "";
         }
 
-        /* save the tts json file (without scripts) */
-        FS.writeFileSync(
+        /* save the main tts json file (without scripts) */
+        if (library['-1']) FS.writeFileSync(
             Path.join(Constants.STRIPPED_FILE), 
-            JSON.stringify(this.json, null, 2)
+            JSON.stringify(library['-1'], null, 2)
         );
     }
 
     /**
      * Write the actual script file to tts-scripts or to tts-empty directory.
-     * @param {*} projectDirectory 
-     * @param {*} name 
-     * @param {*} script 
+     * If the script is empty it get's written to tts-empty.
+     * If it's not empty it get's written to tts-scripts.
+     * @param {*} projectDirectory project root directory
+     * @param {*} name name of the script file to be written
+     * @param {*} script contents of the script file to be written
      */
-    writeScript(projectDirectory, name, script){
-        const trimScript = script.trim();
+    static writeScript(projectDirectory, name, script){
+        if (!FS.existsSync(Constants.SCRIPT_DIR)) FS.mkdirSync(Constants.SCRIPT_DIR, {recursive : true});
+        if (!FS.existsSync(Constants.EMPTY_SCRIPT_DIR)) FS.mkdirSync(Constants.EMPTY_SCRIPT_DIR, {recursive : true});
 
-        if (trimScript.length > 0){
-            const outPath = Path.join(projectDirectory, Constants.SCRIPT_DIR);
-            if (!FS.existsSync(outPath)) FS.mkdirSync(outPath, { recursive: true });
-            const scriptPath = Path.join(projectDirectory, Constants.SCRIPT_DIR, name);
-            FS.writeFileSync(scriptPath, trimScript);
-        } else {
-            const outPath = Path.join(projectDirectory, Constants.EMPTY_SCRIPT_DIR);
-            if (!FS.existsSync(outPath)) FS.mkdirSync(outPath, { recursive: true });
-            const scriptPath = Path.join(projectDirectory, Constants.EMPTY_SCRIPT_DIR, name);
-            FS.closeSync(FS.openSync(scriptPath, 'w'))
-        }
-    }
+        const targetDir = script.length > 0 ? Constants.SCRIPT_DIR : Constants.EMPTY_SCRIPT_DIR;
+        const outPath = Path.join(projectDirectory, targetDir);
 
-    clearDirectory(directory) {
-        if (FS.existsSync(directory)) {
-            FS.rmdirSync(directory, {recursive: true});
-        }
-        FS.mkdirSync(directory);
-    }
+        if (!FS.existsSync(outPath)) FS.mkdirSync(outPath, { recursive: true });
+        const scriptPath = Path.join(projectDirectory, targetDir, name);
+        FS.writeFileSync(scriptPath, script);
+    }   
 }
 
 export default Extractor;
