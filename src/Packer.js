@@ -1,10 +1,10 @@
 import FS from "fs";
-import Injecter from "./Injecter.js";
+import Injector from "./Injector.js";
 
 /**
  * Pack scripts into a save game file.
  */
-class Packer extends Injecter {
+class Packer extends Injector {
     constructor() {
         super();
     }

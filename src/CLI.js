@@ -1,8 +1,5 @@
-import Readline from 'readline';
-import FS from "fs";
 import Extractor from './Extractor.js';
 import Constants from './include/constants.js';
-import Path from 'path';
 import ParseArgs from "@thaerious/parseargs"
 import Packer from './Packer.js';
 import Uploader from './Uploader.js';
@@ -69,10 +66,6 @@ class CLI{
     constructor(){
         this.args = new ParseArgs().loadOptions(parseArgsProps).run();
         this.start();
-        // this.uploader = new Uploader();
-        // this.includeScanner = new IncludeScanner();
-        // this.fileListener = new FileListener(this.includeScanner, (guids)=>this.uploader.upload(guids));
-        // this.ttsListener = new TTSListener(this.fileListener);
     }
 
     async start(){
@@ -106,7 +99,7 @@ class CLI{
             console.log("\t  - display this output");         
             process.exit();
         }
-console.log(this.args.flags);
+
         if (this.args.flags.extract){
                 const projectDirectory = this.args.flags.target;
                 const sourceFile = this.args.flags.game_file;
@@ -115,11 +108,6 @@ console.log(this.args.flags);
                 ex.load(sourceFile);
                 ex.extract();
                 await ex.writeOut(projectDirectory);
-
-                // const stExt = new StateExtractor();
-                // stExt.game = ex.game;
-                // await stExt.extract();
-                // await stExt.writeOut(projectDirectory);
 
                 console.log("extracted object count: " + Object.keys(ex.library).length);            
         }
@@ -144,40 +132,6 @@ console.log(this.args.flags);
                 cleanIf(projectDirectory, dir);
             }
         }
-    }
-
-    listen(){
-        this.ttsListener.listen();
-        const RL = Readline.createInterface(process.stdin, process.stdout);
-        RL.setPrompt('WTTS> ');
-        RL.prompt();
-
-        RL.on('line', line => {
-            try {
-                this.command(line);
-            }catch(err){
-                console.log("CLI error");
-                console.log(err);
-                this.uploader.close();
-                this.ttsListener.close();
-                process.exit(1);
-            }
-            RL.prompt();
-        });
-
-        RL.on('close', function() {
-            if (this.uploader) this.uploader.close();
-            if (this.ttsListener) this.ttsListener.close();
-            process.exit(0);
-        });
-    }
-}
-
-function cleanIf(root, dir){
-    const path = Path.join(root, dir);
-    if (FS.existsSync(path)){
-        console.log("removing directory: " + path);
-        FS.rmSync(path, { recursive: true });
     }
 }
 

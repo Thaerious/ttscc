@@ -2,12 +2,12 @@ import Constants from './include/constants.js';
 import FS from 'fs';
 import Path from 'path';
 import Net from 'net';
-import Injecter from "./Injecter.js";
+import Injector from "./Injector.js";
 
 /**
  * Upload scripts from project directories to a live TTS game.
  */
-class Uploader extends Injecter{
+class Uploader extends Injector{
 
     constructor(){
         super();
