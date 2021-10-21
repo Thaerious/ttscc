@@ -1,3 +1,6 @@
+import FS from 'fs';
+import Path from 'path';
+
 export default function cleanIf(root, dir){
       const path = Path.join(root, dir);
       if (FS.existsSync(path)){

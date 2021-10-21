@@ -1,0 +1,23 @@
+{
+    "LuaScript": "",
+    "ObjectStates": [
+        {
+            "GUID": "e6db0c",
+            "LuaScript": ""
+        },
+        {
+            "GUID": "f6dac0",
+            "LuaScript": "",
+            "ContainedObjects": [
+                {
+                    "GUID": "f8d280",
+                    "LuaScript": ""
+                },
+                {
+                    "GUID": "f5d270",
+                    "LuaScript": ""
+                }
+            ]
+        }
+    ]
+}

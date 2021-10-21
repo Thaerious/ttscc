@@ -2,6 +2,7 @@ import FS from 'fs';
 import Path from 'path';
 import Constants from './include/constants.js';
 import IncludeCleaner from './IncludeCleaner.js';
+import getFilename from './include/getFilename.js';
 
 /**
  * Extract LUA scripts from a game file.
@@ -14,16 +15,16 @@ class Extractor{
      * @param {*} srcname set to override nickname extraction
      * @returns An object with guid->script pairs.
      */
-     static extract(objectState){
-        let library = {};
-        library[objectState.GUID ?? -1] = objectState;
+     extract(objectState){
+        this.library = {};
+        this.library[objectState.GUID ?? -1] = objectState;
         const objectStates = objectState.ObjectStates ?? objectState.ContainedObjects;
 
         for(const containedObject of objectStates ?? []){
-            library = {...library, ...Extractor.extract(containedObject)};
+            this.library = {...this.library, ...this.extract(containedObject)};
         }
 
-        return library;
+        return this.library;
     }
 
     /**
@@ -31,7 +32,13 @@ class Extractor{
      * Writes all non-empty scripts to Constants.SCRIPT_DIR.
      * Writes all empty scripts to Constants.EMPTY_SCRIPT_DIR.
      */
-    async static writeOut(projectDirectory, library){
+    async writeOut(projectDirectory = ".", library = this.library){
+        const scriptDir = Path.join(projectDirectory, Constants.SCRIPT_DIR);
+        const emptyScriptDir = Path.join(projectDirectory, Constants.EMPTY_SCRIPT_DIR);
+
+        if (!FS.existsSync(scriptDir)) FS.mkdirSync(scriptDir, {recursive : true});
+        if (!FS.existsSync(emptyScriptDir)) FS.mkdirSync(emptyScriptDir, {recursive : true});
+
         /* write out scripts from objects & remove scripts from objects */
         for (const guid in library){
             const objectState = library[guid];
@@ -58,9 +65,6 @@ class Extractor{
      * @param {*} script contents of the script file to be written
      */
     static writeScript(projectDirectory, name, script){
-        if (!FS.existsSync(Constants.SCRIPT_DIR)) FS.mkdirSync(Constants.SCRIPT_DIR, {recursive : true});
-        if (!FS.existsSync(Constants.EMPTY_SCRIPT_DIR)) FS.mkdirSync(Constants.EMPTY_SCRIPT_DIR, {recursive : true});
-
         const targetDir = script.length > 0 ? Constants.SCRIPT_DIR : Constants.EMPTY_SCRIPT_DIR;
         const outPath = Path.join(projectDirectory, targetDir);
 

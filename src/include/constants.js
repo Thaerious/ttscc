@@ -12,6 +12,8 @@ export default {
     OBJECT_STATE_DIR : "./tts-src/state",          // location of empty object-states
     UI_DIR : "./tts-src/ui",                       // location of ui json    
 
+    SCRIPT_EXTENSION : "tua",                      // appended to filenames returned from getFilename()
+
     DATA_DIR : "./tts-data",
     SENT_FILE_DIR : "./tts-data/sent",
     RECV_FILE_DIR : "./tts-data/recv",

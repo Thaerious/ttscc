@@ -7,7 +7,7 @@
     "ttscc": "./src/index.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha -g 'runme'"
   },
   "type": "module",
   "author": "",
@@ -17,5 +17,8 @@
     "chokidar": "^3.5.1",
     "string-to-stream": "^3.0.1",
     "tua": "file:../tua"
+  },
+  "devDependencies": {
+    "mocha": "^9.1.3"
   }
 }
