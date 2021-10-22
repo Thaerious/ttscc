@@ -3,22 +3,22 @@
     "ObjectStates": [
         {
             "GUID": "e6db0c",
-            "LuaScript": "--- rem statement",
+            "LuaScript": "--- rem statement 1",
             "Nickname": "Action Card"
         },
         {
             "GUID": "f6dac0",
-            "LuaScript": "--- rem statement",
+            "LuaScript": "--- rem statement 2",
             "Nickname": "Point Deck",
             "ContainedObjects": [
                 {
                     "GUID": "f8d280",
-                    "LuaScript": "--- rem statement",
+                    "LuaScript": "--- rem statement 3",
                     "Nickname": "Point Card"
                 },
                 {
                     "GUID": "f5d270",
-                    "LuaScript": "--- rem statement",
+                    "LuaScript": "--- rem statement 4",
                     "Nickname": "Point Card"
                 }
             ]

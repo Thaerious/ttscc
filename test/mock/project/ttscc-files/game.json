@@ -1,0 +1,27 @@
+{
+  "LuaScript": "",
+  "ObjectStates": [
+    {
+      "GUID": "e6db0c",
+      "LuaScript": "",
+      "Nickname": "Action Card"
+    },
+    {
+      "GUID": "f6dac0",
+      "LuaScript": "",
+      "Nickname": "Point Deck",
+      "ContainedObjects": [
+        {
+          "GUID": "f8d280",
+          "LuaScript": "",
+          "Nickname": "Point Card"
+        },
+        {
+          "GUID": "f5d270",
+          "LuaScript": "",
+          "Nickname": "Point Card"
+        }
+      ]
+    }
+  ]
+}

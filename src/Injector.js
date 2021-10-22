@@ -2,23 +2,30 @@ import FS from 'fs';
 import Path from 'path';
 import Constants from './include/constants.js';
 
+/**
+ * Moves scripts from source files into the the game file.
+ * Puts the script into the game object using the script filename as GUID.
+ * Script #include syntax is replaced by the script file (see TUA project).
+ * The scripts will be injected into the stripped game file found in (ttscc-files/game.json).
+ */
 class Injector{
-
-    inject(){
-        this.log = [];
-        const file = FS.readFileSync(Constants.SAVE_FILE_NAME, "utf-8");        
-        const json = JSON.parse(file);
-
-        for(const objectState of json.ObjectStates){
-            this.injectObject(objectState, json);
-        }
-
-        FS.writeFileSync(filename, JSON.stringify(json, null, 2));
-        console.log("objects processed: " + this.log.length);
-        console.log("reload game in TTS");
+    inject(projectDirectory, targetFilepath){
+        const targetDirectory = Path.dirname(targetFilepath);
+        if (!FS.existsSync(targetDirectory)) FS.mkdirSync(targetDirectory, { recursive: true });
     }
 
-    injectObject(objectState, targetObject){
+    _inject(projectDirectory = "."){
+        // const gameFilePath = Path.join(projectDirectory, Constants.SAVE_FILE_NAME);
+        // const file = FS.readFileSync(, "utf-8");        
+        // const json = JSON.parse(file);
+
+        // for(const objectState of json.ObjectStates) this.injectObject(objectState, json);
+
+        // FS.writeFileSync(filename, JSON.stringify(json, null, 2));
+        // console.log("reload game in TTS");
+    }
+
+    injectObject(objectState){
         const name = objectState.Nickname.trim();
         const guid = objectState.GUID;
         const path = Injector.filepath(guid, name);
@@ -26,7 +33,6 @@ class Injector{
         if (FS.existsSync(path)){            
             let script = FS.readFileSync(path, "utf-8");
             objectState.LuaScript = new Includer().replaceInclude(script, guid);
-            this.log.push(guid);
         }
 
         if (objectState.ContainedObjects){
@@ -34,22 +40,6 @@ class Injector{
                 this.injectObject(containedObject, objectState);
             }
         }
-    }
-
-    static filepath(guid, name){
-        console.log(guid);
-        console.log(name);
-        if (name !== undefined){
-            return Path.join(Constants.EXTRACT_DIR, name.replaceAll(/[ ]/g, "_"), guid + ".lua");
-        }
-
-        const json = FS.readFileSync(
-            Path.join(Constants.EXTRACT_DIR, Constants.EXTRACT_DICTIONARY_FILE), 
-            JSON.stringify(this.guidLookup, null, 2)
-        );
-
-        const dict = JSON.parse(json);
-        return dict[guid];
     }
 }
 
