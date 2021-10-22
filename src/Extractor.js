@@ -32,7 +32,7 @@ class Extractor{
      * Writes all non-empty scripts to Constants.SCRIPT_DIR.
      * Writes all empty scripts to Constants.EMPTY_SCRIPT_DIR.
      */
-    async writeOut(projectDirectory = ".", library = this.library){
+    writeOut(projectDirectory = ".", library = this.library){
         const scriptDir = Path.join(projectDirectory, Constants.SCRIPT_DIR);
         const emptyScriptDir = Path.join(projectDirectory, Constants.EMPTY_SCRIPT_DIR);
 
@@ -44,14 +44,17 @@ class Extractor{
             const objectState = library[guid];
             const name = getFilename(objectState);
             const savedScript = objectState.LuaScript ?? "";
-            const cleanedScript = await new IncludeCleaner().processString(savedScript); 
+            const cleanedScript = new IncludeCleaner().clean(savedScript); 
             Extractor.writeScript(projectDirectory, name, cleanedScript.trim());
             objectState.LuaScript = "";
         }
 
         /* save the main tts json file (without scripts) */
-        if (library['-1']) FS.writeFileSync(
-            Path.join(Constants.STRIPPED_FILE), 
+        const strippedGameFilePath = Path.join(projectDirectory, Constants.STRIPPED_FILE);
+
+        FS.mkdirSync(Path.dirname(strippedGameFilePath), {recursive : true});
+        if (library['-1']) FS.writeFileSync(            
+            Path.join(strippedGameFilePath), 
             JSON.stringify(library['-1'], null, 2)
         );
     }
@@ -66,12 +69,12 @@ class Extractor{
      */
     static writeScript(projectDirectory, name, script){
         const targetDir = script.length > 0 ? Constants.SCRIPT_DIR : Constants.EMPTY_SCRIPT_DIR;
-        const outPath = Path.join(projectDirectory, targetDir);
-
-        if (!FS.existsSync(outPath)) FS.mkdirSync(outPath, { recursive: true });
         const scriptPath = Path.join(projectDirectory, targetDir, name);
+        const scriptDir = Path.dirname(scriptPath);
+
+        if (!FS.existsSync(scriptDir)) FS.mkdirSync(scriptDir, { recursive: true });
         FS.writeFileSync(scriptPath, script);
-    }   
+    }
 }
 
 export default Extractor;

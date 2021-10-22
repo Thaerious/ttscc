@@ -1,11 +1,11 @@
 export default {           
     EXTRACT_DICTIONARY_FILE : "dictionary.json",   // name of guid -> file map, location is PROJECT_FILES_DIR
     SAVE_FILE_NAME : "a.json",                     // default save name for game file
-    STRIPPED_FILE : "./project-files/game.json",   // location of the backup game file
+    STRIPPED_FILE : "./ttscc-files/game.json",   // location of the backup game file
     GLOBAL_FILENAME : "global",                    // main entry point filename (w/o ext)
 
-    PROJECT_FILES_DIR : "./project-files",         // location of project management files
-    PACKED_DIRECTORY :  "./project-files/packed",  // location of packed script files for debugging
+    PROJECT_FILES_DIR : "./ttscc-files",         // location of project management files
+    PACKED_DIRECTORY :  "./ttscc-files/packed",  // location of packed script files for debugging
     
     SCRIPT_DIR : "./tts-src/script",               // location of non-empty object-scripts
     EMPTY_SCRIPT_DIR : "./tts-src/empty",          // location of empty object-scripts
@@ -27,6 +27,6 @@ export default {
 
     // removes these directories in order
     CLEAN : [
-        "./project-files"
+        "./ttscc-files"
     ]
 };

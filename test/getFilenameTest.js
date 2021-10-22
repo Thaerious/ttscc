@@ -7,7 +7,7 @@ describe("Get File Name - src/include/getFilename.js", function () {
       });
 
       it("if the object has no GUID root filename (see constants.js),", function () {
-            assert.strictEqual("global", getFilename({}));
+            assert.strictEqual("global.tua", getFilename({}));
       });
 
       it("if the object has a GUID but no nickname return only the [GUID].tua as filename,", function () {

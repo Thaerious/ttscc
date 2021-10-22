@@ -1,74 +1,31 @@
 import ReadLine from 'readline';
 import OS from 'os';
 import { Readable } from 'stream';
+import { timingSafeEqual } from 'crypto';
 
 /**
  * Removes included text.  Any text between '--->' and '---<' gets removed.
- * Uncomments include directives ('---- #include').
+ * Uncomments include directives ('---- #include' becomes '#inlclude').
  */
 class IncludeCleaner {
-    /**
-     * 
-     * @param {*} includes a map of include -> script
-     */
-    constructor() {
+    clean(string){
         this.includeDepth = 0;
+        this.linesOut = [];
+        const split = string.split(/\r?\n/);
+        for (const line of split) this.processLine(line);
+        return this.linesOut.join("\n");
     }
 
-    /**
-     * Any text that had previously been inserted by the Uploader.fillElementScript
-     * method will be removed and replaced with a #include directive.
-     * @param {String} string The cleaned incoming script text
-     */
-    async processString(string){
-        let rstring = "";
-        await this.readString(string, line => rstring = rstring + line + OS.EOL);
-        return rstring;
+    writeLine(line){
+        this.linesOut.push(line);
     }
 
-    /**
-     * Workhorse method for 'processString()', kept seperate for testing.
-     * Takes in document text and processes it line by line.
-     * Will call the 'cb' function on each line to be written out.
-     * @param {*} string the document text
-     * @param {*} cb cb(string) is called when a line should be written out.
-     */
-    async readString(string, cb) {
-        this.writeLine = cb ?? function(){};
-
-        let rl = ReadLine.createInterface({
-            input: Readable.from(string),
-            crlfDelay: Infinity
-        });
-
-        for await (const line of rl) this.processLine(line);
-    }
-
-    includeStart(){
-        this.includeDepth = this.includeDepth + 1;
-    }
-
-    includeLine(line){
-        if (this.includeDepth == 0){
-            this.writeLine(line);
-        } 
-    }
-
-    includeEnd(){
-        this.includeDepth = this.includeDepth - 1;
-    }
-
-    /**
-     * @param {String} line 
-     */
     processLine(line){        
-        // Beginning of include
         if (line.match(/^--->/)) {
-            this.includeStart();
+            this.includeDepth++;
         }
-        // end of include
         else if (line.match(/^---</)) {
-            this.includeEnd();
+            this.includeDepth > 0 ? this.includeDepth-- : this.writeLine(line);
         }
         else if (line.match(/^---- ?#include/)) {
             if (this.includeDepth <= 0) this.writeLine(line.slice(5));
@@ -76,6 +33,9 @@ class IncludeCleaner {
         else if (this.includeDepth <= 0) {
             this.writeLine(line);
         } 
+        else {
+            // inside include, do nothing
+        }
     }
 }
 

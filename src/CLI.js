@@ -3,6 +3,7 @@ import Constants from './include/constants.js';
 import ParseArgs from "@thaerious/parseargs"
 import Packer from './Packer.js';
 import Uploader from './Uploader.js';
+import loadJSON from './include/loadJSON.js';
 
 const parseArgsProps = {
     flags : [
@@ -103,12 +104,10 @@ class CLI{
         if (this.args.flags.extract){
                 const projectDirectory = this.args.flags.target;
                 const sourceFile = this.args.flags.game_file;
-
                 const ex = new Extractor()
-                ex.load(sourceFile);
-                ex.extract();
+                const json = loadJSON(sourceFile);
+                ex.extract(json);
                 await ex.writeOut(projectDirectory);
-
                 console.log("extracted object count: " + Object.keys(ex.library).length);            
         }
 
