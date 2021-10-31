@@ -19,10 +19,11 @@
     "tua": "file:../tua"
   },
   "devDependencies": {
+    "c8": "^7.10.0",
     "mocha": "^9.1.3"
   },
-  "mocha" : {
-    "allowUncaught" : true,
-    "color" : true
+  "mocha": {
+    "allowUncaught": true,
+    "color": true
   }
 }

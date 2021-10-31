@@ -5,6 +5,17 @@ import Path from "path";
 import FS from "fs";
 import Injector from "../src/Injector.js";
 
+function getObjectByGUID(obj, guid){
+    if (!guid || guid == '-1') return game;
+    const childStates = obj.objectState["ContainedObjects"] ?? obj.objectState["ObjectStates"];
+
+    if (childStates){
+        for(const childState of childStates){
+            if (childState["GUID"] === guid) return childState;
+        }
+    }
+}
+
 describe("Injector Test - src/Injector.js", function () {
     describe("#inject()", function () {
         this.afterEach(() => {
@@ -19,27 +30,16 @@ describe("Injector Test - src/Injector.js", function () {
             if (FS.existsSync(path)) {
                 FS.rmSync(path, { recursive: true });
             }
-        });        
-
-        // it("fails if input directory not found", () => {
-        //     // new Injector().inject("test/mock/project", "deleteme/out.json");
-        // });
-        // it("fails if input directory doesn't have ttscc-files/game.json file", () => {
-        //     // new Injector().inject("test/mock/project", "deleteme/out.json");
-        // });        
-        it("creates output directory", () => {
-            new Injector().inject("test/mock/project", "deleteme/out.json");
-            const exists = FS.existsSync(
-                Path.join("deleteme")
-            );
-            assert.strictEqual(exists, true);              
         });
-        // it("creates output file", () => {
-        //     new Injector().inject("test/mock/project", "deleteme/out.json");
-        //     const exists = FS.existsSync(
-        //         Path.join("deleteme", "out.json")
-        //     );
-        //     assert.strictEqual(exists, true);    
-        // });
+
+        it("root script get's injected", () => {
+            const game = new Injector().inject("test/mock/project");
+            const script = game['LuaScript'];
+            const srcScript = FS.readFileSync('test/mock/project/tts-src/script/global.tua', {encoding: "utf-8"});
+            assert.strictEqual(srcScript.trim(), script.trim());
+        });
+
+
+        // f5d270 is in the wrong directory, still injects
     });
 });
