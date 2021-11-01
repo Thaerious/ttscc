@@ -1,9 +1,9 @@
 import Extractor from './Extractor.js';
-import Constants from './include/constants.js';
 import ParseArgs from "@thaerious/parseargs"
-import Packer from './Packer.js';
+import Injector from './Injector.js';
 import Uploader from './Uploader.js';
 import loadJSON from './include/loadJSON.js';
+import FS from 'fs';
 
 const parseArgsProps = {
     flags : [
@@ -25,23 +25,18 @@ const parseArgsProps = {
                 "desc"    : "display this output",
                 "boolean" : true
             },        
-            {
-                "long"    : "clean",
-                "desc"    : "remove project directories and files",
-                "boolean" : true
-            },
-            {
-                "long"    : "download",
-                "short"   : "d",
-                "desc"    : "download and extract the game currently loaded in TTS",
-                "boolean" : true
-            },
-            {
-                "long"    : "upload",
-                "short"   : "u",
-                "desc"    : "upload the scripts to the server",
-                "boolean" : true
-            },            
+            // {
+            //     "long"    : "download",
+            //     "short"   : "d",
+            //     "desc"    : "download and extract the game currently loaded in TTS",
+            //     "boolean" : true
+            // },
+            // {
+            //     "long"    : "upload",
+            //     "short"   : "u",
+            //     "desc"    : "upload the scripts to the server",
+            //     "boolean" : true
+            // },            
             {
                 "long"    : "target",
                 "short"   : "t",
@@ -81,15 +76,12 @@ class CLI{
             console.log("\t-p, --pack");
             console.log("\t  - retrieve scripts from directories and insert into game file");
             console.log("\n");
-            console.log("\t-c --clean");
-            console.log("\t  - remove project directories from target directory");
-            console.log("\n");
-            console.log("\t-d --download");
-            console.log("\t  - download and extract the game currently loaded in TTS");
-            console.log("\n");
-            console.log("\t-u --upload");
-            console.log("\t  - upload the game to the server");
-            console.log("\n");            
+            // console.log("\t-d --download");
+            // console.log("\t  - download and extract the game currently loaded in TTS");
+            // console.log("\n");
+            // console.log("\t-u --upload");
+            // console.log("\t  - upload the game to the server");
+            // console.log("\n");            
             console.log("\t-t, --target");
             console.log("\t  - location of the project directory, default '.'");
             console.log("\n");
@@ -102,35 +94,27 @@ class CLI{
         }
 
         if (this.args.flags.extract){
-                const projectDirectory = this.args.flags.target;
-                const sourceFile = this.args.flags.game_file;
-                const ex = new Extractor()
-                const json = loadJSON(sourceFile);
-                ex.extract(json);
-                await ex.writeOut(projectDirectory);
-                console.log("extracted object count: " + Object.keys(ex.library).length);            
+            console.log("Extract " + this.args.flags.game_file + " -> " + this.args.flags.target);
+            const ex = new Extractor();
+            ex.extract(loadJSON(this.args.flags.game_file));
+            ex.writeOut(this.args.flags.target);
         }
 
         if (this.args.flags.pack){
             const projectDirectory = this.args.flags.target;
             const targetFile = this.args.flags.game_file;
             console.log("PACK " + projectDirectory + " -> " + targetFile);
-            new Packer().inject(projectDirectory).write(targetFile);
+            const gameobject = new Injector().inject(projectDirectory);
+
+            FS.writeFileSync(targetFile, JSON.stringify(gameobject, null, 2));
         }
 
-        if (this.args.flags.upload){
-            const projectDirectory = this.args.flags.target;
-            const targetFile = this.args.flags.game_file;
-            console.log("UPLOAD " + projectDirectory + " -> TTS");
-            new Uploader().inject(projectDirectory).upload();
-        }        
-
-        if (this.args.flags.clean){
-            const projectDirectory = this.args.flags.target;
-            for (let dir of Constants.CLEAN){
-                cleanIf(projectDirectory, dir);
-            }
-        }
+        // if (this.args.flags.upload){
+        //     const projectDirectory = this.args.flags.target;
+        //     const targetFile = this.args.flags.game_file;
+        //     console.log("UPLOAD " + projectDirectory + " -> TTS");
+        //     new Uploader().inject(projectDirectory).upload();
+        // }        
     }
 }
 

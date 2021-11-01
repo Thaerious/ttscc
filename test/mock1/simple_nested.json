@@ -4,22 +4,26 @@
         {
             "GUID": "e6db0c",
             "LuaScript": "--- rem statement 1",
-            "Nickname": "Action Card"
+            "Nickname": "Action Card",
+            "Description": "depth 1 - only no children"
         },
         {
             "GUID": "f6dac0",
             "LuaScript": "--- rem statement 2",
             "Nickname": "Point Deck",
+            "Description": "depth 1 - has children",
             "ContainedObjects": [
                 {
                     "GUID": "f8d280",
                     "LuaScript": "--- rem statement 3",
-                    "Nickname": "Point Card"
+                    "Nickname": "Point Card",
+                    "Description": "depth 2 - first object"
                 },
                 {
                     "GUID": "f5d270",
                     "LuaScript": "--- rem statement 4",
-                    "Nickname": "Point Card"
+                    "Nickname": "Point Card",
+                    "Description": "depth 2 - second object"
                 }
             ]
         }

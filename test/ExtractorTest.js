@@ -9,19 +9,19 @@ describe("Extractor Test - src/Extractor.js", function () {
         describe("should return a list of all objects", function () {
             it("returns 1 object when the game only has the root object", function () {
                 const extractor = new Extractor();
-                const json = loadJSON("test/mock/simple_empty.json");
+                const json = loadJSON("test/mock1/simple_empty.json");
                 const library = extractor.extract(json);
                 assert.strictEqual(Object.keys(library).length, 1);
             });
             it("returns 2 objects when the game has the root and another object", function () {
                 const extractor = new Extractor();
-                const json = loadJSON("test/mock/simple_double.json");
+                const json = loadJSON("test/mock1/simple_double.json");
                 const library = extractor.extract(json);
                 assert.strictEqual(Object.keys(library).length, 2);
             });
             it("returns nested objects as well as root objects", function () {
                 const extractor = new Extractor();
-                const json = loadJSON("test/mock/simple_nested.json");
+                const json = loadJSON("test/mock1/simple_nested.json");
                 const library = extractor.extract(json);
                 assert.strictEqual(Object.keys(library).length, 5);
             });
@@ -38,7 +38,7 @@ describe("Extractor Test - src/Extractor.js", function () {
 
             it("creates the script directory if it doesn't exist", function () {
                 const extractor = new Extractor();
-                const json = loadJSON("test/mock/mock_game_01.json");
+                const json = loadJSON("test/mock1/mock_game_01.json");
                 extractor.extract(json);
                 extractor.writeOut("deleteme/");
 
@@ -49,7 +49,7 @@ describe("Extractor Test - src/Extractor.js", function () {
             });
             it("creates the empty script directory if it doesn't exist", function () {
                 const extractor = new Extractor();
-                const json = loadJSON("test/mock/simple_empty.json");
+                const json = loadJSON("test/mock1/simple_empty.json");
                 extractor.extract(json);
                 extractor.writeOut("deleteme/");
 
@@ -60,7 +60,7 @@ describe("Extractor Test - src/Extractor.js", function () {
             });
             it("creates project files directory", function () {
                 const extractor = new Extractor();
-                const json = loadJSON("test/mock/mock_game_01.json");
+                const json = loadJSON("test/mock1/mock_game_01.json");
                 extractor.extract(json);
                 extractor.writeOut("deleteme/");
 
@@ -71,7 +71,7 @@ describe("Extractor Test - src/Extractor.js", function () {
             });
             it("creates stripped game file", function () {
                 const extractor = new Extractor();
-                const json = loadJSON("test/mock/mock_game_01.json");
+                const json = loadJSON("test/mock1/mock_game_01.json");
                 extractor.extract(json);
                 extractor.writeOut("deleteme/");
 
@@ -85,7 +85,7 @@ describe("Extractor Test - src/Extractor.js", function () {
         describe("putting scripts into subdirectories based on nick name", function () {
             it("the root object doesn't go into a subdirectory", function () {
                 const extractor = new Extractor();
-                const json = loadJSON("test/mock/simple_nested.json");
+                const json = loadJSON("test/mock1/simple_nested.json");
                 const library = extractor.extract(json);
                 extractor.writeOut("deleteme");
 
@@ -97,7 +97,7 @@ describe("Extractor Test - src/Extractor.js", function () {
 
             it("objects in the root get a subdirectory", function () {
                 const extractor = new Extractor();
-                const json = loadJSON("test/mock/simple_nested.json");
+                const json = loadJSON("test/mock1/simple_nested.json");
                 const library = extractor.extract(json);
                 extractor.writeOut("deleteme");
 
@@ -109,7 +109,7 @@ describe("Extractor Test - src/Extractor.js", function () {
 
             it("objects in other objects get a subdirectory", function () {
                 const extractor = new Extractor();
-                const json = loadJSON("test/mock/simple_nested.json");
+                const json = loadJSON("test/mock1/simple_nested.json");
                 const library = extractor.extract(json);
                 extractor.writeOut("deleteme");
 
