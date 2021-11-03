@@ -86,6 +86,7 @@ describe("Injector Test - src/Injector.js", function () {
             it("comments out the include statement", () => {
                 const injector = new Injector();
                 injector.addIncludePath("test/mock2/include");
+                injector.addIncludePath("test/mock2/alt-include");
                 const game = injector.inject("test/mock2/project");
                 const script = game["LuaScript"];
                 assert.notStrictEqual(script.indexOf(`---- #include "keys.tua"`), -1);
@@ -93,6 +94,7 @@ describe("Injector Test - src/Injector.js", function () {
             it("has opening tag for include block", () => {
                 const injector = new Injector();
                 injector.addIncludePath("test/mock2/include");
+                injector.addIncludePath("test/mock2/alt-include");
                 const game = injector.inject("test/mock2/project");
                 const script = game["LuaScript"];
                 assert.notStrictEqual(script.indexOf(`---> keys.tua`), -1);
@@ -100,6 +102,7 @@ describe("Injector Test - src/Injector.js", function () {
             it("has contents of include file", () => {
                 const injector = new Injector();
                 injector.addIncludePath("test/mock2/include");
+                injector.addIncludePath("test/mock2/alt-include");
                 const game = injector.inject("test/mock2/project");
                 const script = game["LuaScript"];
                 assert.notStrictEqual(script.indexOf(`board = "88e31a"`), -1);
@@ -132,9 +135,10 @@ describe("Injector Test - src/Injector.js", function () {
             });
         });
         describe("child script", function () {
-            it("comments out the include statement", () => {
+            it("(here) comments out the include statement", () => {
                 const injector = new Injector();
                 injector.addIncludePath("test/mock2/include");
+                injector.addIncludePath("test/mock2/alt-include");
                 const game = injector.inject("test/mock2/project");
                 const script = getObjectByGUID(game, "f6dac0")["LuaScript"];
                 assert.notStrictEqual(script.indexOf(`---- #include "keys.tua"`), -1);
@@ -142,6 +146,7 @@ describe("Injector Test - src/Injector.js", function () {
             it("has opening tag for include block", () => {
                 const injector = new Injector();
                 injector.addIncludePath("test/mock2/include");
+                injector.addIncludePath("test/mock2/alt-include");
                 const game = injector.inject("test/mock2/project");
                 const script = getObjectByGUID(game, "f6dac0")["LuaScript"];
                 assert.notStrictEqual(script.indexOf(`---> keys.tua`), -1);
@@ -149,6 +154,7 @@ describe("Injector Test - src/Injector.js", function () {
             it("has contents of include file", () => {
                 const injector = new Injector();
                 injector.addIncludePath("test/mock2/include");
+                injector.addIncludePath("test/mock2/alt-include");
                 const game = injector.inject("test/mock2/project");
                 const script = getObjectByGUID(game, "f6dac0")["LuaScript"];
                 assert.notStrictEqual(script.indexOf(`board = "88e31a"`), -1);
@@ -170,7 +176,7 @@ describe("Injector Test - src/Injector.js", function () {
                     const script = getObjectByGUID(game, "f6dac0")["LuaScript"];
                     assert.notStrictEqual(script.indexOf(`---> foo.tua`), -1);
                 });
-                it("has contents of include file", () => {
+                it("[x] has contents of include file", () => {
                     const injector = new Injector();
                     injector.addIncludePath("test/mock2/include");
                     injector.addIncludePath("test/mock2/alt-include");
