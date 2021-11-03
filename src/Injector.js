@@ -16,6 +16,10 @@ import TuaTranslator from 'Tua';
  */
 class Injector{
 
+    constructor(){
+        this.includePaths = [];
+    }
+
     /**
      * @param {*} projectDirectory Location of project directories and files.
      * @param {*} targetFilepath Location of game file after inject is complete.
@@ -32,6 +36,10 @@ class Injector{
         return gameFile;
     }
 
+    addIncludePath(...paths){
+        for (const path of paths) this.includePaths.push(path);
+    }
+
     /**
      * If there is a file that matches the object's GUID as determined by getFilename
      * then set the "Luascript" field value to the contents of the file.
@@ -43,6 +51,7 @@ class Injector{
         /* inject script into object */
         if (this.fileMap[filename]){
             const tuaTranslator = new TuaTranslator();
+            tuaTranslator.addIncludePath(...this.includePaths);
             tuaTranslator.addSource(this.fileMap[filename]);            
             tuaTranslator.parseClasses();
             objectState["LuaScript"] = tuaTranslator.toString();        

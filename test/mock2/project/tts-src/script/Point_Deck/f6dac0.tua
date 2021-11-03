@@ -1,1 +1,2 @@
---- rem statement 2
+#include "keys.tua"
+#include "foo.tua"
