@@ -54,7 +54,8 @@ class Injector{
             tuaTranslator.addIncludePath(...this.includePaths);
             tuaTranslator.addSource(this.fileMap[filename]);            
             tuaTranslator.parseClasses();
-            objectState["LuaScript"] = tuaTranslator.toString();        
+            objectState["LuaScript"] = tuaTranslator.toString();
+            this.writeDebugFile(objectState);
         }
 
         const childStates = objectState["ContainedObjects"] ?? objectState["ObjectStates"];
@@ -65,6 +66,15 @@ class Injector{
                 this.injectObject(childState);
             }
         }
+    }
+
+    writeDebugFile(objectState){
+        if (objectState.LuaScript === "") return;
+        const name = objectState.GUID ?? "global";
+        const fullpath = Path.join(Constants.PACKED_DIRECTORY, name + ".tua");
+        const dir = Path.dirname(fullpath);
+        if (!FS.existsSync(dir)) FS.mkdirSync(dir, {recursive : true});
+        FS.writeFileSync(fullpath, objectState.LuaScript);
     }
 }
 

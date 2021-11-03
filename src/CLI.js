@@ -18,7 +18,14 @@ const parseArgsProps = {
                 "short"   : "x",
                 "desc"    : "retrieve scripts from game file and put them into the project's directories",
                 "boolean" : true
-            },                         
+            }, 
+            {
+                "long"    : "include",
+                "short"   : "i",
+                "desc"    : "specify the include directories in a colon delimted string",
+                "default" : "include",
+                "boolean" : false
+            },                                     
             {
                 "long"    : "help",
                 "short"   : "h",
@@ -101,12 +108,12 @@ class CLI{
         }
 
         if (this.args.flags.pack){
-            const projectDirectory = this.args.flags.target;
-            const targetFile = this.args.flags.game_file;
-            console.log("PACK " + projectDirectory + " -> " + targetFile);
-            const gameobject = new Injector().inject(projectDirectory);
-
-            FS.writeFileSync(targetFile, JSON.stringify(gameobject, null, 2));
+            console.log("PACK " + this.args.flags.target + " -> " + this.args.flags.game_file);
+            const includes = this.args.flags["include"].split(":");
+            const injector = new Injector();
+            injector.addIncludePath(...includes);
+            const gameobject = injector.inject(this.args.flags.target);
+            FS.writeFileSync(this.args.flags.game_file, JSON.stringify(gameobject, null, 2));
         }
 
         // if (this.args.flags.upload){
