@@ -43,7 +43,14 @@ const parseArgsProps = {
             //     "short"   : "u",
             //     "desc"    : "upload the scripts to the server",
             //     "boolean" : true
-            // },            
+            // },   
+            {
+                "long"    : "debug",
+                "short"   : "d",
+                "desc"    : "create debug files",
+                "boolean" : true,
+                "default" : false
+            },                     
             {
                 "long"    : "target",
                 "short"   : "t",
@@ -114,6 +121,10 @@ class CLI{
             injector.addIncludePath(...includes);
             const gameobject = injector.inject(this.args.flags.target);
             FS.writeFileSync(this.args.flags.game_file, JSON.stringify(gameobject, null, 2));
+
+            if (this.args.flags.debug){
+                injector.writeDebugFiles(this.args.flags.target);
+            }
         }
 
         // if (this.args.flags.upload){
