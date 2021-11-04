@@ -30,10 +30,10 @@ class Injector{
         this.fileMap = Object.assign({}, ...files.map(x=>({[x.name] : x.fullpath})));
 
         const gameFilePath = Path.join(projectDirectory, Constants.STRIPPED_FILE);
-        const gameFile = loadJSON(gameFilePath);
+        this.rootGameObject = loadJSON(gameFilePath);
 
-        this.injectObject(gameFile);
-        return gameFile;
+        this.injectObject(this.rootGameObject);
+        return this.rootGameObject;
     }
 
     addIncludePath(...paths){
@@ -55,7 +55,6 @@ class Injector{
             tuaTranslator.addSource(this.fileMap[filename]);            
             tuaTranslator.parseClasses();
             objectState["LuaScript"] = tuaTranslator.toString();
-            this.writeDebugFile(objectState);
         }
 
         const childStates = objectState["ContainedObjects"] ?? objectState["ObjectStates"];
@@ -68,13 +67,23 @@ class Injector{
         }
     }
 
-    writeDebugFile(objectState){
-        if (objectState.LuaScript === "") return;
-        const name = objectState.GUID ?? "global";
-        const fullpath = Path.join(Constants.PACKED_DIRECTORY, name + ".tua");
-        const dir = Path.dirname(fullpath);
-        if (!FS.existsSync(dir)) FS.mkdirSync(dir, {recursive : true});
-        FS.writeFileSync(fullpath, objectState.LuaScript);
+    writeDebugFiles(projectDirectory = ".", objectState = this.rootGameObject){
+        if (objectState.LuaScript !== ""){
+            const name = objectState.GUID ?? "global";
+            const fullpath = Path.join(projectDirectory, Constants.PACKED_DIRECTORY, name + ".tua");
+            const dir = Path.dirname(fullpath);
+            if (!FS.existsSync(dir)) FS.mkdirSync(dir, {recursive : true});     
+            FS.writeFileSync(fullpath, objectState.LuaScript);
+        }
+
+        const childStates = objectState["ContainedObjects"] ?? objectState["ObjectStates"];
+
+        /* recurse over any contained objects */
+        if (childStates){
+            for(const childState of childStates){
+                this.writeDebugFiles(projectDirectory, childState);
+            }
+        }
     }
 }
 

@@ -176,7 +176,7 @@ describe("Injector Test - src/Injector.js", function () {
                     const script = getObjectByGUID(game, "f6dac0")["LuaScript"];
                     assert.notStrictEqual(script.indexOf(`---> foo.tua`), -1);
                 });
-                it("[x] has contents of include file", () => {
+                it("has contents of include file", () => {
                     const injector = new Injector();
                     injector.addIncludePath("test/mock2/include");
                     injector.addIncludePath("test/mock2/alt-include");
@@ -185,6 +185,18 @@ describe("Injector Test - src/Injector.js", function () {
                     assert.notStrictEqual(script.indexOf(`ima foo four ewe`), -1);
                 });
             });
-        });        
+            describe("injector creates a debug script in project files directory (ttscc-files/packed)", function () {
+                it("creates the file for a child script", () => {
+                    const injector = new Injector();
+                    injector.addIncludePath("test/mock2/include");
+                    injector.addIncludePath("test/mock2/alt-include");
+                    injector.inject("test/mock2/project");
+                    injector.writeDebugFiles("deleteme");
+
+                    const script = FS.readFileSync("deleteme/ttscc-files/packed/f6dac0.tua");
+                    assert.notStrictEqual(script.indexOf(`---- #include "keys.tua"`), -1);
+                });
+            });
+        });
     });
 });
