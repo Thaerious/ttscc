@@ -197,6 +197,25 @@ describe("Injector Test - src/Injector.js", function () {
                     assert.notStrictEqual(script.indexOf(`---- #include "keys.tua"`), -1);
                 });
             });
+            describe("#filemap retrieves the non-reflective filename to file location dictionary", function () {
+                it("retrieves a map", () => {
+                    const injector = new Injector();
+                    injector.addIncludePath("test/mock2/include");
+                    injector.addIncludePath("test/mock2/alt-include");
+                    injector.inject("test/mock2/project");
+                    assert.notStrictEqual(undefined, injector.filemap);
+                });
+                it("map is non-reflective", () => {
+                    const injector = new Injector();
+                    injector.addIncludePath("test/mock2/include");
+                    injector.addIncludePath("test/mock2/alt-include");
+                    injector.inject("test/mock2/project");
+                    const filemap = injector.filemap;
+                    filemap.a = "not relfected";
+                    assert.strictEqual(undefined, injector.filemap.a);
+                });
+
+            });            
         });
     });
 });

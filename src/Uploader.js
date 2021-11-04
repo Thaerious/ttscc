@@ -52,11 +52,7 @@ class Uploader extends Injector{
 
     buildElement(guid, dictionary){
         const filename = dictionary[guid];
-        const path = Path.join(
-            this.projectDirectory,
-            Constants.PACKED_DIRECTORY,
-            filename + ".tua"
-        );
+        const path = Path.join(this.projectDirectory, Constants.PACKED_DIRECTORY, filename + ".tua");
 
         if (!FS.existsSync(path)) return undefined;
 

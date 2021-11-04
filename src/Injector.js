@@ -17,7 +17,12 @@ import TuaTranslator from 'Tua';
 class Injector{
 
     constructor(){
-        this.includePaths = [];
+        this.includePaths = []; // a list of paths to search for include files
+        this._fileMap = {};      // a dictionary of filenames to file location
+    }
+
+    get filemap(){
+        return structuredClone(this._fileMap);
     }
 
     /**
@@ -27,7 +32,7 @@ class Injector{
     inject(projectDirectory){
         this.projectDirectory = projectDirectory;
         const files = getFiles(Path.join(this.projectDirectory, Constants.SCRIPT_DIR));
-        this.fileMap = Object.assign({}, ...files.map(x=>({[x.name] : x.fullpath})));
+        this._fileMap = Object.assign({}, ...files.map(x=>({[x.name] : x.fullpath})));
 
         const gameFilePath = Path.join(projectDirectory, Constants.STRIPPED_FILE);
         this.rootGameObject = loadJSON(gameFilePath);
@@ -49,10 +54,10 @@ class Injector{
         const filename = Path.basename(getFilename(objectState));
         
         /* inject script into object */
-        if (this.fileMap[filename]){
+        if (this._fileMap[filename]){
             const tuaTranslator = new TuaTranslator();
             tuaTranslator.addIncludePath(...this.includePaths);
-            tuaTranslator.addSource(this.fileMap[filename]);            
+            tuaTranslator.addSource(this._fileMap[filename]);            
             tuaTranslator.parseClasses();
             objectState["LuaScript"] = tuaTranslator.toString();
         }
