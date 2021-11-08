@@ -38,12 +38,12 @@ const parseArgsProps = {
             //     "desc"    : "download and extract the game currently loaded in TTS",
             //     "boolean" : true
             // },
-            // {
-            //     "long"    : "upload",
-            //     "short"   : "u",
-            //     "desc"    : "upload the scripts to the server",
-            //     "boolean" : true
-            // },   
+            {
+                "long"    : "upload",
+                "short"   : "u",
+                "desc"    : "upload the scripts to the server",
+                "boolean" : true
+            },   
             {
                 "long"    : "debug",
                 "short"   : "d",
@@ -93,9 +93,9 @@ class CLI{
             // console.log("\t-d --download");
             // console.log("\t  - download and extract the game currently loaded in TTS");
             // console.log("\n");
-            // console.log("\t-u --upload");
-            // console.log("\t  - upload the game to the server");
-            // console.log("\n");            
+            console.log("\t-u --upload");
+            console.log("\t  - upload the game to the server");
+            console.log("\n");            
             console.log("\t-t, --target");
             console.log("\t  - location of the project directory, default '.'");
             console.log("\n");
@@ -114,25 +114,28 @@ class CLI{
             ex.writeOut(this.args.flags.target);
         }
 
-        if (this.args.flags.pack){
-            console.log("PACK " + this.args.flags.target + " -> " + this.args.flags.game_file);
-            const includes = this.args.flags["include"].split(":");
+        if (this.args.flags.pack || this.args.flags.upload){
+            const includes = this.args.flags["include"].split(":");            
             const injector = new Injector();
             injector.addIncludePath(...includes);
             const gameobject = injector.inject(this.args.flags.target);
-            FS.writeFileSync(this.args.flags.game_file, JSON.stringify(gameobject, null, 2));
+            
+            if (this.args.flags.pack){
+                console.log("PACK " + this.args.flags.target + " -> " + this.args.flags.game_file);
+                FS.writeFileSync(this.args.flags.game_file, JSON.stringify(gameobject, null, 2));
+            }
 
             if (this.args.flags.debug){
                 injector.writeDebugFiles(this.args.flags.target);
             }
-        }
 
-        // if (this.args.flags.upload){
-        //     const projectDirectory = this.args.flags.target;
-        //     const targetFile = this.args.flags.game_file;
-        //     console.log("UPLOAD " + projectDirectory + " -> TTS");
-        //     new Uploader().inject(projectDirectory).upload();
-        // }        
+            if (this.args.flags.upload){
+                console.log("UPLOAD " + this.args.flags.target);
+                const uploader = new Uploader();
+                const message = uploader.buildMessage(gameobject);
+                uploader.upload(message);
+            }              
+        }
     }
 }
 

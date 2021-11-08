@@ -1,7 +1,8 @@
 import getFilename from "../src/include/getFilename.js";
 import assert from "assert";
+import Path from "path";
 
-describe("Get File Name - src/include/getFilename.js", function () {
+describe("Get File Name Test - src/include/getFilename.js", function () {
       it("empty string throws error", function () {
             assert.throws(()=>getFilename(""), {name : 'SyntaxError'});
       });
@@ -21,6 +22,6 @@ describe("Get File Name - src/include/getFilename.js", function () {
                   Nickname : "yellow cube"
             };
 
-            assert.strictEqual("yellow_cube/aabb01e.tua", getFilename(obj));
+            assert.strictEqual(getFilename(obj), Path.join("yellow_cube", "aabb01e.tua"));
       });      
 });

@@ -7,25 +7,26 @@ import Injector from "./Injector.js";
 /**
  * Upload scripts from project directories to a live TTS game.
  */
-class Uploader extends Injector{
-
-    constructor(){
-        super();
-    }
-
+class Uploader{
     /**
      * Upload all GUID script files. 
      */
-    upload(){
+    upload(message){
+        if (typeof message === "object"){
+            message = JSON.stringify(message);
+        };
+
         this.socket = new Net.Socket();
-        this.socket.connect(Constants.WRITE_PORT);
+        this.socket.connect({
+            host: "127.0.0.1",
+            port: Constants.WRITE_PORT
+        });
 
         this.socket.on("error", (err)=>{            
             console.log(err);
         });
 
-        this.socket.on("connect", () => {            
-            const message = this.buildMessage();
+        this.socket.on("connect", () => {       
             this.socket.write(message);
         });
     }
@@ -35,6 +36,8 @@ class Uploader extends Injector{
      * @returns
      */
     buildMessage(rootGameObject){
+        if (!rootGameObject) throw new Error("undefined root game object");
+
         const msg = {
             messageID: 1,
             scriptStates:[]
@@ -51,6 +54,8 @@ class Uploader extends Injector{
     }
 
     buildMessageElement(gameObject){
+        if (!gameObject) throw new Error("undefined game object");
+
         let element = {
             "guid" : gameObject.GUID ?? "-1",
             "name" : gameObject.Nickname,
