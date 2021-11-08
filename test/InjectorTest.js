@@ -1,5 +1,4 @@
 import assert from "assert";
-import Extractor from "../src/Extractor.js";
 import loadJSON from "../src/include/loadJSON.js";
 import Path from "path";
 import FS from "fs";
@@ -21,17 +20,17 @@ function getObjectByGUID(obj, guid) {
 }
 
 describe("getObjectByGUID() - test function", () => {
-    it("retrives object depth = 1", () => {
+    it("retrieves object depth = 1", () => {
         const json = loadJSON("test/mock1/simple_nested.json");
         const obj = getObjectByGUID(json, "e6db0c");
         assert.strictEqual("depth 1 - only no children", obj["Description"]);
     });
-    it("retrives object depth = 2", () => {
+    it("retrieves object depth = 2", () => {
         const json = loadJSON("test/mock1/simple_nested.json");
         const obj = getObjectByGUID(json, "f8d280");
         assert.strictEqual("depth 2 - first object", obj["Description"]);
     });
-    it("retrives object depth = 2", () => {
+    it("retrieves object depth = 2", () => {
         const json = loadJSON("test/mock1/simple_nested.json");
         const obj = getObjectByGUID(json, "000000");
         assert.strictEqual(undefined, obj);
@@ -42,7 +41,7 @@ describe("Injector Test - src/Injector.js", function () {
     this.afterEach(() => {
         const path = Path.join("deleteme");
         if (FS.existsSync(path)) {
-            // FS.rmSync(path, { recursive: true });
+            FS.rmSync(path, { recursive: true });
         }
     });
 

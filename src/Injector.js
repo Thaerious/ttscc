@@ -25,6 +25,10 @@ class Injector{
         return structuredClone(this._fileMap);
     }
 
+    get rootGameObject(){
+        return structuredClone(this._rootGameObject);
+    }
+
     /**
      * @param {*} projectDirectory Location of project directories and files.
      * @param {*} targetFilepath Location of game file after inject is complete.
@@ -35,10 +39,10 @@ class Injector{
         this._fileMap = Object.assign({}, ...files.map(x=>({[x.name] : x.fullpath})));
 
         const gameFilePath = Path.join(projectDirectory, Constants.STRIPPED_FILE);
-        this.rootGameObject = loadJSON(gameFilePath);
+        this._rootGameObject = loadJSON(gameFilePath);
 
-        this.injectObject(this.rootGameObject);
-        return this.rootGameObject;
+        this.injectObject(this._rootGameObject);
+        return this._rootGameObject;
     }
 
     addIncludePath(...paths){
@@ -72,7 +76,7 @@ class Injector{
         }
     }
 
-    writeDebugFiles(projectDirectory = ".", objectState = this.rootGameObject){
+    writeDebugFiles(projectDirectory = ".", objectState = this._rootGameObject){
         if (objectState.LuaScript !== ""){
             const name = objectState.GUID ?? "global";
             const fullpath = Path.join(projectDirectory, Constants.PACKED_DIRECTORY, name + ".tua");

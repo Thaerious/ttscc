@@ -34,35 +34,30 @@ class Uploader extends Injector{
      * Create the JSON message for TSS save & play.
      * @returns
      */
-    buildMessage(){
-        const dictionary = this.getDictionary();
-
-        let msg = {
+    buildMessage(rootGameObject){
+        const msg = {
             messageID: 1,
             scriptStates:[]
         };
 
-        for (let guid in dictionary){
-            const element = this.buildElement(guid, dictionary);
-            if (element) msg.scriptStates.push(element);
+        msg.scriptStates.push(this.buildMessageElement(rootGameObject));
+
+        /* recurse over any contained objects */
+        for(const childState of rootGameObject["ObjectStates"]){
+            msg.scriptStates.push(this.buildMessageElement(childState));
         }
 
-        return JSON.stringify(msg);
+        return msg;
     }
 
-    buildElement(guid, dictionary){
-        const filename = dictionary[guid];
-        const path = Path.join(this.projectDirectory, Constants.PACKED_DIRECTORY, filename + ".tua");
+    buildMessageElement(gameObject){
+        console.log(gameObject);
 
-        if (!FS.existsSync(path)) return undefined;
-
-        let element = {};
-        element.guid = guid;
-        element.name = dictionary[guid];
-
-        let data = FS.readFileSync(path);
-        element.script = data.toString('ascii', 0, data.length);
-
+        let element = {
+            "guid" : gameObject.GUID ?? "-1",
+            "name" : gameObject.Nickname,
+            "script" : gameObject.LuaScript
+        };
         return element;
     }
 }
