@@ -51,8 +51,6 @@ class Uploader extends Injector{
     }
 
     buildMessageElement(gameObject){
-        console.log(gameObject);
-
         let element = {
             "guid" : gameObject.GUID ?? "-1",
             "name" : gameObject.Nickname,
