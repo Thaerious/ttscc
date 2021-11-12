@@ -8,6 +8,12 @@
             "Description": "depth 1 - only no children"
         },
         {
+            "GUID": "a1f0bc",
+            "LuaScript": "",
+            "Nickname": "Action Card",
+            "Description": "no script"
+        },        
+        {
             "GUID": "f6dac0",
             "LuaScript": "--- rem statement 2",
             "Nickname": "Point Deck",

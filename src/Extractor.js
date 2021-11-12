@@ -63,6 +63,7 @@ class Extractor{
      * Write the actual script file to tts-scripts or to tts-empty directory.
      * If the script is empty it get's written to tts-empty.
      * If it's not empty it get's written to tts-scripts.
+     * Will not overwrite scripts already in the directory.
      * @param {*} projectDirectory project root directory
      * @param {*} name name of the script file to be written
      * @param {*} script contents of the script file to be written
@@ -73,7 +74,7 @@ class Extractor{
         const scriptDir = Path.dirname(scriptPath);
 
         if (!FS.existsSync(scriptDir)) FS.mkdirSync(scriptDir, { recursive: true });
-        FS.writeFileSync(scriptPath, script);
+        if (!FS.existsSync(scriptPath)) FS.writeFileSync(scriptPath, script);
     }
 }
 
