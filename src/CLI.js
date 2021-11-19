@@ -64,7 +64,7 @@ const parseArgsProps = {
                 "desc"    : "location of the game file",
                 "boolean" : false,
                 "default" : "a.json"
-            }  
+            }
         ]
     };
 

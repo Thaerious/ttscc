@@ -78,8 +78,9 @@ class Injector{
 
     writeDebugFiles(projectDirectory = ".", objectState = this._rootGameObject){
         if (objectState.LuaScript !== ""){
-            const name = objectState.GUID ?? "global";
-            const fullpath = Path.join(projectDirectory, Constants.PACKED_DIRECTORY, name + ".tua");
+            // const name = objectState.GUID ?? "global";
+            const name = getFilename(objectState);
+            const fullpath = Path.join(projectDirectory, Constants.PACKED_DIRECTORY, name);
             const dir = Path.dirname(fullpath);
             if (!FS.existsSync(dir)) FS.mkdirSync(dir, {recursive : true});     
             FS.writeFileSync(fullpath, objectState.LuaScript);
