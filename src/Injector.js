@@ -20,6 +20,16 @@ class Injector{
         this.includePaths = [];    // a list of paths to search for include files
         this._fileMap = {};        // a dictionary of filenames to file location
         this._field = "LuaScript"; // the name of the field to inject to
+        this._extension = ".tua";
+        this.transpile = true;
+    }
+
+    set extension(value){
+        this._extension = value;
+    }
+
+    get extension(){
+        return this._extension;
     }
 
     set field(value){
@@ -40,11 +50,14 @@ class Injector{
 
     /**
      * @param {*} projectDirectory Location of project directories and files.
-     * @param {*} targetFilepath Location of game file after inject is complete.
+     * @param {*} sourceDirectory Location of source files within project directory.
      */
-    inject(projectDirectory){
+    inject(projectDirectory, sourceDirectory = Constants.SCRIPT_DIR){
         this.projectDirectory = projectDirectory;
-        const files = getFiles(Path.join(this.projectDirectory, Constants.SCRIPT_DIR));
+
+        // create a filename -> fullpath dictionary of all files in target directory
+        const targetDirectory = Path.join(this.projectDirectory, sourceDirectory);
+        const files = getFiles(targetDirectory);
         this._fileMap = Object.assign({}, ...files.map(x=>({[x.name] : x.fullpath})));
 
         const gameFilePath = Path.join(projectDirectory, Constants.STRIPPED_FILE);
@@ -64,15 +77,20 @@ class Injector{
      * @param {} objectState The json object found in the game file
      */
     injectObject(objectState){
-        const filename = Path.basename(getFilename(objectState));
-        
+        const filename = Path.basename(getFilename(objectState, this.extension));
+
         /* inject script into object */
-        if (this._fileMap[filename]){
-            const tuaTranslator = new TuaTranslator();
-            tuaTranslator.addIncludePath(...this.includePaths);
-            tuaTranslator.addSource(this._fileMap[filename]);            
-            tuaTranslator.parseClasses();
-            objectState[this.field] = tuaTranslator.toString();
+        if (this._fileMap[filename]){  
+            if (this.transpile){          
+                const tuaTranslator = new TuaTranslator();
+                tuaTranslator.addIncludePath(...this.includePaths);
+                tuaTranslator.addSource(this._fileMap[filename]);
+                tuaTranslator.parseClasses();
+                objectState[this.field] = tuaTranslator.toString();
+            } else {
+                const fileContents = FS.readFileSync(this._fileMap[filename], "utf-8");
+                objectState[this.field] = fileContents;
+            }
         }
 
         const childStates = objectState["ContainedObjects"] ?? objectState["ObjectStates"];
@@ -87,8 +105,7 @@ class Injector{
 
     writeDebugFiles(projectDirectory = ".", objectState = this._rootGameObject){
         if (objectState[this.field] !== ""){
-            // const name = objectState.GUID ?? "global";
-            const name = getFilename(objectState);
+            const name = getFilename(objectState, this.extension);
             const fullpath = Path.join(projectDirectory, Constants.PACKED_DIRECTORY, name);
             const dir = Path.dirname(fullpath);
             if (!FS.existsSync(dir)) FS.mkdirSync(dir, {recursive : true});     

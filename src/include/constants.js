@@ -7,12 +7,13 @@ export default {
     PROJECT_FILES_DIR : "./ttscc-files",         // location of project management files
     PACKED_DIRECTORY :  "./ttscc-files/packed",  // location of packed script files for debugging
     
-    SCRIPT_DIR : "./tts-src/script",               // location of source scripts
+    SCRIPT_DIR : "./tts-src/script",               // location of source tua scripts
+    UI_DIR : "./tts-src/ui",                       // location of source ui xml
     EMPTY_SCRIPT_DIR : "./tts-src/empty",          // location of empty object-scripts
     OBJECT_STATE_DIR : "./tts-src/state",          // location of empty object-states
     UI_DIR : "./tts-src/ui",                       // location of ui json    
 
-    SCRIPT_EXTENSION : "tua",                      // appended to filenames returned from getFilename()
+    SCRIPT_EXTENSION : "tua",                      // appended to filenames returned from getFilename()    
 
     DATA_DIR : "./tts-data",
     SENT_FILE_DIR : "./tts-data/sent",

@@ -7,6 +7,7 @@ import Path from "path";
  * @returns the filename with extension
  */
 export default function getFilename(objectState, extension = Constants.SCRIPT_EXTENSION) {
+      if (extension.startsWith(".")) extension = extension.substring(1);
       if (!objectState) throw new SyntaxError("missing 'objectState' parameter");
       if (!objectState.GUID) return `${Constants.GLOBAL_FILENAME}.${extension}`;
       if (objectState.GUID === "-1") return `${Constants.GLOBAL_FILENAME}.${extension}`;
