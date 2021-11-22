@@ -4,6 +4,7 @@ import Injector from './Injector.js';
 import Uploader from './Uploader.js';
 import loadJSON from './include/loadJSON.js';
 import FS from 'fs';
+import constants from './include/constants.js';
 
 const parseArgsProps = {
     flags : [
@@ -118,8 +119,15 @@ class CLI{
             const includes = this.args.flags["include"].split(":");            
             const injector = new Injector();
             injector.addIncludePath(...includes);
-            const gameobject = injector.inject(this.args.flags.target);
-            
+            injector.inject(this.args.flags.target);
+
+            injector.clearFilemap();
+            injector.field = "XmlUI";
+            injector.extension = ".xml";
+            injector.transpile = false;
+            const gameobject = injector.inject(this.args.flags.target, constants.UI_DIR);
+            console.log(injector.filemap);
+
             if (this.args.flags.pack){
                 console.log("PACK " + this.args.flags.target + " -> " + this.args.flags.game_file);
                 FS.writeFileSync(this.args.flags.game_file, JSON.stringify(gameobject, null, 2));

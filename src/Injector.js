@@ -48,6 +48,10 @@ class Injector{
         return structuredClone(this._rootGameObject);
     }
 
+    clearFilemap(){
+        this._fileMap = {}
+    }
+
     /**
      * @param {*} projectDirectory Location of project directories and files.
      * @param {*} sourceDirectory Location of source files within project directory.
@@ -61,7 +65,7 @@ class Injector{
         this._fileMap = Object.assign({}, ...files.map(x=>({[x.name] : x.fullpath})));
 
         const gameFilePath = Path.join(projectDirectory, Constants.STRIPPED_FILE);
-        this._rootGameObject = loadJSON(gameFilePath);
+        this._rootGameObject = this._rootGameObject ?? loadJSON(gameFilePath);
 
         this.injectObject(this._rootGameObject);
         return this._rootGameObject;

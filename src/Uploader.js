@@ -57,9 +57,10 @@ class Uploader{
         if (!gameObject) throw new Error("undefined game object");
 
         let element = {
-            "guid" : gameObject.GUID ?? "-1",
-            "name" : gameObject.Nickname,
-            "script" : gameObject.LuaScript
+            "guid"   : gameObject.GUID ?? "-1",
+            "name"   : gameObject.Nickname,
+            "script" : gameObject.LuaScript,
+            "ui"     : gameObject.XmlUI
         };
         return element;
     }
