@@ -17,8 +17,17 @@ import TuaTranslator from 'Tua';
 class Injector{
 
     constructor(){
-        this.includePaths = []; // a list of paths to search for include files
-        this._fileMap = {};      // a dictionary of filenames to file location
+        this.includePaths = [];    // a list of paths to search for include files
+        this._fileMap = {};        // a dictionary of filenames to file location
+        this._field = "LuaScript"; // the name of the field to inject to
+    }
+
+    set field(value){
+        this._field = value;
+    }    
+
+    get field(){
+        return this._field;
     }
 
     get filemap(){
@@ -52,7 +61,7 @@ class Injector{
     /**
      * If there is a file that matches the object's GUID as determined by getFilename
      * then set the "Luascript" field value to the contents of the file.
-     * @param {} objectState 
+     * @param {} objectState The json object found in the game file
      */
     injectObject(objectState){
         const filename = Path.basename(getFilename(objectState));
@@ -63,7 +72,7 @@ class Injector{
             tuaTranslator.addIncludePath(...this.includePaths);
             tuaTranslator.addSource(this._fileMap[filename]);            
             tuaTranslator.parseClasses();
-            objectState["LuaScript"] = tuaTranslator.toString();
+            objectState[this.field] = tuaTranslator.toString();
         }
 
         const childStates = objectState["ContainedObjects"] ?? objectState["ObjectStates"];
@@ -77,13 +86,13 @@ class Injector{
     }
 
     writeDebugFiles(projectDirectory = ".", objectState = this._rootGameObject){
-        if (objectState.LuaScript !== ""){
+        if (objectState[this.field] !== ""){
             // const name = objectState.GUID ?? "global";
             const name = getFilename(objectState);
             const fullpath = Path.join(projectDirectory, Constants.PACKED_DIRECTORY, name);
             const dir = Path.dirname(fullpath);
             if (!FS.existsSync(dir)) FS.mkdirSync(dir, {recursive : true});     
-            FS.writeFileSync(fullpath, objectState.LuaScript);
+            FS.writeFileSync(fullpath, objectState[this.field]);
         }
 
         const childStates = objectState["ContainedObjects"] ?? objectState["ObjectStates"];

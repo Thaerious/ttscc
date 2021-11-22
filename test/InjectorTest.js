@@ -160,7 +160,7 @@ describe("Injector Test - src/Injector.js", function () {
                     injector.inject("test/mock2/project");
                     injector.writeDebugFiles("deleteme");
 
-                    const script = FS.readFileSync("deleteme/ttscc-files/packed/f6dac0.tua");
+                    const script = FS.readFileSync("deleteme/ttscc-files/packed/Point_Deck/f6dac0.tua");
                     assert.notStrictEqual(script.indexOf(`---- #include "keys.tua"`), -1);
                 });
             });
